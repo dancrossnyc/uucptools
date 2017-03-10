@@ -17,44 +17,34 @@ long Hashpart;			/* start of unreached nodes */
 long Nheap;			/* end of heap */
 long NumNcopy, Nlink, NumLcopy;
 
-void mapit();
-
 /* imports */
 extern long Nheap, Hashpart, Tabsize, Tcount;
 extern int Tflag, Vflag;
-extern node **Table, *Home;
+extern Node **Table, *Home;
 extern char *Linkout, *Graphout;
-
-extern void freelink(), resetnodes(), printit(), dumpgraph();
-extern void showlinks(), die();
-extern long pack(), allocation();
-extern link *newlink(), *addlink();
-extern int maptrace(), tiebreaker();
-extern node *ncopy();
-
 
 /* privates */
 static long Heaphighwater;
-static link **Heap;
+static Link **Heap;
 
 static void insert(), heapup(), heapdown(), heapswap(), backlinks();
 static void setheapbits(), mtracereport(), heapchildren(), otracereport();
-static link *min_node();
+static Link *min_node();
 static int dehash(), skiplink(), skipterminalalias();
 static Cost costof();
-static node *mappedcopy();
+static Node *mappedcopy();
 
 /* transform the graph to a shortest-path tree by marking tree edges */
 void
 mapit(void)
 {
-	node *n;
-	link *l;
+	Node *n;
+	Link *l;
 
 	vprintf(stderr, "*** mapping\ttcount = %ld\n", Tcount);
 	Tflag = Tflag && Vflag;	/* tracing here only if verbose */
 	/* re-use the hash table space for the heap */
-	Heap = (link **) Table;
+	Heap = (Link **) Table;
 	Hashpart = pack(0L, Tabsize - 1);
 
 	/* expunge penalties from -a option and make circular copy lists */
@@ -120,10 +110,10 @@ mapit(void)
 }
 
 static void
-heapchildren(node *n)
+heapchildren(Node *n)
 {
-	link *l;
-	node *next;
+	Link *l;
+	Node *next;
 	int mtrace;
 	Cost cost;
 
@@ -194,7 +184,7 @@ heapchildren(node *n)
  * heap next -- it will happen over and over and over and ...
  */
 static int
-skipterminalalias(node *n, node *next)
+skipterminalalias(Node *n, Node *next)
 {
 
 	while (n->n_flag & NALIAS) {
@@ -213,14 +203,14 @@ skipterminalalias(node *n, node *next)
  */
 static int
 skiplink(
-    link *l,			/* new link to this node */
-    node *parent,		/* (potential) new parent of this node */
+    Link *l,			/* new link to this node */
+    Node *parent,		/* (potential) new parent of this node */
     Cost cost,			/* new cost to this node */
     int trace			/* trace this link? */
 )
 {
-	node *n;	/* this node */
-	link *lheap;	/* old link to this node */
+	Node *n;	/* this node */
+	Link *lheap;	/* old link to this node */
 
 	n = l->l_to;
 
@@ -268,9 +258,9 @@ skiplink(
 
 /* compute cost to next (l->l_to) via prev */
 static Cost
-costof(node *prev, link *l)
+costof(Node *prev, Link *l)
 {
-	node *next;
+	Node *next;
 	Cost cost;
 
 	if (l->l_flag & LALIAS)
@@ -308,9 +298,9 @@ costof(node *prev, link *l)
 
 /* binary heap implementation of priority queue */
 static void
-insert(link *l)
+insert(Link *l)
 {
-	node *n;
+	Node *n;
 
 	n = l->l_to;
 	if (n->n_flag & MAPPED)
@@ -341,11 +331,11 @@ insert(link *l)
  * i know this seems obscure, but it's harmless and cheap.  trust me.
  */
 static void
-heapup(link *l)
+heapup(Link *l)
 {
 	long cindx, pindx;	/* child, parent indices */
 	Cost cost;
-	node *child, *parent;
+	Node *child, *parent;
 
 	child = l->l_to;
 
@@ -372,11 +362,12 @@ heapup(link *l)
 }
 
 /* extract min (== Heap[1]) from heap */
-static link *
+static Link *
 min_node(void)
 {
-	link *rval, *lastlink;
-	link **rheap;
+	Link *rval, *lastlink;
+
+	Link **rheap;
 
 	if (Nheap == 0)
 		return 0;
@@ -405,11 +396,11 @@ min_node(void)
  */
 
 static void
-heapdown(link *l)
+heapdown(Link *l)
 {
 	long pindx, cindx;
-	link **rheap = Heap;	/* in register -- heavily used */
-	node *child, *rchild, *parent;
+	Link **rheap = Heap;	/* in register -- heavily used */
+	Node *child, *rchild, *parent;
 
 	pindx = l->l_to->n_tloc;
 	parent = rheap[pindx]->l_to;	/* invariant */
@@ -457,7 +448,7 @@ heapdown(link *l)
 static void
 heapswap(long i, long j)
 {
-	link *temp, **rheap;
+	Link *temp, **rheap;
 
 	rheap = Heap;		/* heavily used -- put in register */
 	temp = rheap[i];
@@ -469,7 +460,7 @@ heapswap(long i, long j)
 
 /* return 1 if n is already de-hashed (n_tloc < Hashpart), 0 o.w. */
 static int
-dehash(node *n)
+dehash(Node *n)
 {
 	if (n->n_tloc < Hashpart)
 		return 1;
@@ -496,9 +487,9 @@ dehash(node *n)
 static void
 backlinks(void)
 {
-	link *l;
-	node *n, *child;
-	node *nomap;
+	Link *l;
+	Node *n, *child;
+	Node *nomap;
 	long i;
 
 	/* hosts from Hashpart to Tabsize are unreachable */
@@ -551,10 +542,10 @@ backlinks(void)
 }
 
 /* find a mapped copy of n if it exists */
-static node *
-mappedcopy(node *n)
+static Node *
+mappedcopy(Node *n)
 {
-	node *ncp;
+	Node *ncp;
 
 	if (n->n_flag & MAPPED)
 		return n;
@@ -569,10 +560,10 @@ mappedcopy(node *n)
  * so reset the state bits for l->l_to.
  */
 static void
-setheapbits(link *l)
+setheapbits(Link *l)
 {
-	node *n;
-	node *parent;
+	Node *n;
+	Node *parent;
 
 	n = l->l_to;
 	parent = n->n_parent;
@@ -594,9 +585,9 @@ setheapbits(link *l)
 }
 
 static void
-mtracereport(node *from, link *l, char *excuse)
+mtracereport(Node *from, Link *l, char *excuse)
 {
-	node *to = l->l_to;
+	Node *to = l->l_to;
 
 	fprintf(stderr, "%-16s ", excuse);
 	trprint(stderr, from);
@@ -612,7 +603,7 @@ mtracereport(node *from, link *l, char *excuse)
 }
 
 static void
-otracereport(node *n)
+otracereport(Node *n)
 {
 	if (n->n_parent)
 		trprint(stderr, n->n_parent);
@@ -645,7 +636,7 @@ chkheap(i)
 #if 00
 	/* this hasn't been used for years */
 	for (i = 1; i < Nheap; i++) {
-		link *l;
+		Link *l;
 
 		vprintf(stderr, "%5d %-16s", i, Heap[i]->l_to->n_name);
 		if ((l = Heap[i]->l_to->n_link) != 0)
@@ -655,8 +646,8 @@ chkheap(i)
 		vprintf(stderr, "\n");
 	}
 	for (i = Hashpart; i < Tabsize; i++) {
-		link *l;
-		node *n;
+		Link *l;
+		Node *n;
 
 		vprintf(stderr, "%5d %-16s", i, Table[i]->n_name);
 		if ((l = Table[i]->n_link) != 0)

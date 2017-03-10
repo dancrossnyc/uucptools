@@ -1,14 +1,10 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)addlink.c	9.7 88/06/10";
-#endif				/* lint */
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
 
 #include "def.h"
 
 /* exports */
-extern link *addlink();
-extern void deadlink(), atrace(), freelink();
-extern int tracelink(), maptrace();
 char *Netchars = "!:@%";	/* sparse, but sufficient */
 long Lcount;			/* how many edges? */
 
@@ -20,17 +16,19 @@ extern void yyerror(), die();
 extern int strcmp(), strlen();
 
 /* privates */
-static void netbits(), ltrace(), ltrprint();
-static link *Trace[NTRACE];
+static void netbits(Link *l, int netchar, int netdir);
+static void ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message);
+static void ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message);
+static Link *Trace[NTRACE];
 static int Tracecount;
 
 #define EQ(n1, n2)	(strcmp((n1)->n_name, (n2)->n_name) == 0)
 #define LTRACE		if (Tflag) ltrace
 
-link *
-addlink(node *from, node *to, Cost cost, int netchar, int netdir)
+Link *
+addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 {
-	link *l, *prev = 0;
+	Link *l, *prev = 0;
 
 	LTRACE(from, to, cost, netchar, netdir, "");
 	/*
@@ -85,9 +83,9 @@ addlink(node *from, node *to, Cost cost, int netchar, int netdir)
 }
 
 void
-deadlink(node *nleft, node *nright)
+deadlink(Node *nleft, Node *nright)
 {
-	link *l, *lhold = 0, *lprev, *lnext;
+	Link *l, *lhold = 0, *lprev, *lnext;
 
 	/* DEAD host */
 	if (nright == 0) {
@@ -132,7 +130,7 @@ deadlink(node *nleft, node *nright)
 }
 
 static void
-netbits(link *l, int netchar, int netdir)
+netbits(Link *l, int netchar, int netdir)
 {
 	l->l_flag &= ~LDIR;
 	l->l_flag |= netdir;
@@ -143,7 +141,7 @@ int
 tracelink(char *arg)
 {
 	char *bang;
-	link *l;
+	Link *l;
 
 	if (Tracecount >= NTRACE)
 		return -1;
@@ -164,11 +162,10 @@ tracelink(char *arg)
  * the obvious choice for testing equality is to compare struct
  * addresses, but that misses private nodes, so we use strcmp().
  */
-
 static void
-ltrace(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
+ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 {
-	link *l;
+	Link *l;
 	int i;
 
 	for (i = 0; i < Tracecount; i++) {
@@ -188,7 +185,7 @@ ltrace(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 
 /* print a trace item */
 static void
-ltrprint(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
+ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 {
 	char buf[256], *bptr = buf;
 
@@ -206,17 +203,17 @@ ltrprint(node *from, node *to, Cost cost, int netchar, int netdir, char *message
 }
 
 void
-atrace(node *n1, node *n2)
+atrace(Node *n1, Node *n2)
 {
-	link *l;
+	Link *l;
 	int i;
 	char buf[256];
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
 		if (l->l_to == 0
-		    && ((node *) l->l_from == n1
-		    || (node *) l->l_from == n2)) {
+		    && ((Node *) l->l_from == n1
+		    || (Node *) l->l_from == n2)) {
 			sprintf(buf, "%s = %s", n1->n_name, n2->n_name);
 			yyerror(buf);
 			return;
@@ -225,9 +222,9 @@ atrace(node *n1, node *n2)
 }
 
 int
-maptrace(node *from, node *to)
+maptrace(Node *from, Node *to)
 {
-	link *l;
+	Link *l;
 	int i;
 
 	for (i = 0; i < Tracecount; i++) {
@@ -242,9 +239,9 @@ maptrace(node *from, node *to)
 }
 
 void
-deletelink(node *from, node *to)
+deletelink(Node *from, Node *to)
 {
-	link *l, *lnext;
+	Link *l, *lnext;
 
 	l = from->n_link;
 

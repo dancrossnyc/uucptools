@@ -7,27 +7,15 @@ static char *sccsid = "@(#)mapaux.c	9.8 91/06/23";
 
 /* imports */
 extern long Nheap, Hashpart, Tabsize, NumNcopy, Nlink, NumLcopy;
-extern node **Table, *Home;
+extern Node **Table, *Home;
 extern char *Graphout, *Linkout, *Netchars, **Argv;
 extern int Vflag;
-extern void freelink(), die();
-extern long pack();
-extern link *newlink();
-extern node *newnode();
-extern char *strsave();
-extern int strcmp(), strlen();
-
-/* exports */
-extern long pack();
-extern void resetnodes(), dumpgraph(), showlinks(), terminalnet();
-extern int tiebreaker();
-extern node *ncopy();
 
 /* privates */
 static FILE *Gstream;		/* for dumping graph */
 static void dumpnode(), untangle(), dfs();
 static int height();
-static link *lcopy();
+static Link *lcopy();
 
 /*
  * slide everything from Table[low] to Table[high]
@@ -58,7 +46,7 @@ void
 resetnodes(void)
 {
 	long i;
-	node *n;
+	Node *n;
 
 	for (i = Hashpart; i < Tabsize; i++)
 		if ((n = Table[i]) != 0) {
@@ -79,7 +67,7 @@ void
 dumpgraph(void)
 {
 	long i;
-	node *n;
+	Node *n;
 
 	if ((Gstream = fopen(Graphout, "w")) == NULL) {
 		fprintf(stderr, "%s: ", Argv[0]);
@@ -104,11 +92,11 @@ dumpgraph(void)
 }
 
 static void
-dumpnode(node *from)
+dumpnode(Node *from)
 {
-	node *to;
-	link *l;
-	link *lnet = 0, *ll, *lnext;
+	Node *to;
+	Link *l;
+	Link *lnet = 0, *ll, *lnext;
 
 	for (l = from->n_link; l; l = l->l_next) {
 		to = l->l_to;
@@ -175,7 +163,7 @@ static void
 untangle(void)
 {
 	long i;
-	node *n;
+	Node *n;
 
 	for (i = Hashpart; i < Tabsize; i++) {
 		n = Table[i];
@@ -186,10 +174,10 @@ untangle(void)
 }
 
 static void
-dfs(node *n)
+dfs(Node *n)
 {
-	link *l;
-	node *next;
+	Link *l;
+	Node *next;
 
 	n->n_flag |= INDFS;
 	n->n_root = n;
@@ -210,8 +198,8 @@ dfs(node *n)
 void
 showlinks(void)
 {
-	link *l;
-	node *n;
+	Link *l;
+	Node *n;
 	long i;
 	FILE *estream;
 
@@ -244,10 +232,10 @@ showlinks(void)
 #define NEWP 0
 #define OLDP 1
 int
-tiebreaker(node *n, node *newp)
+tiebreaker(Node *n, Node *newp)
 {
 	char *opname, *npname, *name;
-	node *oldp;
+	Node *oldp;
 	int metric;
 
 	oldp = n->n_parent;
@@ -304,7 +292,7 @@ tiebreaker(node *n, node *newp)
 }
 
 static int
-height(node *n)
+height(Node *n)
 {
 	int i = 0;
 
@@ -326,10 +314,10 @@ height(node *n)
 		      && ((n)->n_copy->n_flag & NTERMINAL) \
 		      && !((n)->n_copy->n_flag & NALIAS) \
 		      && !((l)->l_flag & LALIAS))
-node *
-ncopy(node *parent, link *l)
+Node *
+ncopy(Node *parent, Link *l)
 {
-	node *n, *ncp;
+	Node *n, *ncp;
 
 #ifdef DEBUG
 	if (Vflag > 1)
@@ -368,11 +356,11 @@ ncopy(node *parent, link *l)
  *
  * why copy any links other than aliases?  hmmm ...
  */
-static link *
-lcopy(node *parent, node *n)
+static Link *
+lcopy(Node *parent, Node *n)
 {
-	link *l, *lcp;
-	link *first = 0, *last = 0;
+	Link *l, *lcp;
+	Link *first = 0, *last = 0;
 
 	for (l = n->n_link; l != 0; l = l->l_next) {
 		/* skip if dest is already mapped */

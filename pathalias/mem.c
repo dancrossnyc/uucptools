@@ -9,58 +9,55 @@ static char *sccsid = "@(#)mem.c	9.6 92/08/25";
 
 /* exports */
 long Ncount;
-extern void freelink(), wasted(), freetable();
-extern long allocation();
 
 /* imports */
 extern char *Netchars;
 extern int Vflag;
-extern void die();
 
 /* privates */
 static void nomem();
-static link *Lcache;
+static Link *Lcache;
 static unsigned int Memwaste;
 
-link *
+Link *
 newlink(void)
 {
-	link *rval;
+	Link *rval;
 
 	if (Lcache) {
 		rval = Lcache;
 		Lcache = Lcache->l_next;
-		strclear((char *)rval, sizeof(link));
-	} else if ((rval = (link *) calloc(1, sizeof(link))) == 0)
+		strclear((char *)rval, sizeof(Link));
+	} else if ((rval = (Link *) calloc(1, sizeof(Link))) == 0)
 		nomem();
 	return rval;
 }
 
 /* caution: this destroys the contents of l_next */
 void
-freelink(link *l)
+freelink(Link *l)
 {
 	l->l_next = Lcache;
 	Lcache = l;
 }
 
-node *
+Node *
 newnode(void)
 {
-	node *rval;
+	Node *rval;
 
-	if ((rval = (node *) calloc(1, sizeof(node))) == 0)
+	if ((rval = (Node *) calloc(1, sizeof(Node))) == 0)
 		nomem();
 	Ncount++;
 	return rval;
 }
 
-dom *
+Dom *
 newdom(void)
 {
-	dom *rval;
+	Dom *rval;
 
-	if ((rval = (dom *) calloc(1, sizeof(dom))) == 0)
+	if ((rval = (Dom *) calloc(1, sizeof(Dom))) == 0)
 		nomem();
 
 	return rval;
@@ -78,20 +75,20 @@ strsave(char *s)
 	return r;
 }
 
-node **
+Node **
 newtable(long size)
 {
-	node **rval;
+	Node **rval;
 
 	if ((rval =
-	    (node **) calloc(1,
-	    (unsigned int)size * sizeof(node *))) == 0)
+	    (Node **) calloc(1,
+	    (unsigned int)size * sizeof(Node *))) == 0)
 		nomem();
 	return rval;
 }
 
 void
-freetable(node **t, long size)
+freetable(Node **t, long size)
 {
 	free((char *)t);
 }

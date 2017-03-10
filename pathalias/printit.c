@@ -10,18 +10,13 @@ static char *sccsid = "@(#)printit.c	9.4 89/02/07";
  * use lots of char bufs -- profiling indicates this costs about 5 kbytes
  */
 
-/* exports */
-extern void printit();
-
 /* imports */
 extern int Cflag, Vflag, Dflag, Fflag;
-extern node *Home;
+extern Node *Home;
 extern char *Netchars;
-extern void die();
-extern int strlen();
 
 /* privates */
-static link *Ancestor;		/* for -f option */
+static Link *Ancestor;		/* for -f option */
 static void preorder(), setpath(), printhost(), printdomain();
 static char *hostpath();
 static int printable();
@@ -32,7 +27,7 @@ static int printable();
 void
 printit(void)
 {
-	link *l;
+	Link *l;
 	char pbuf[PATHSIZE];
 
 	/* print home */
@@ -57,10 +52,10 @@ printit(void)
  * preorder traversal of shortest path tree.
  */
 static void
-preorder(link *l, char *ppath)
+preorder(Link *l, char *ppath)
 {
-	node *n;
-	node *ncp;		/* circular copy list */
+	Node *n;
+	Node *ncp;		/* circular copy list */
 	Cost cost;
 	char npath[PATHSIZE];
 	short p_dir;		/* DIR bits of parent (for nets) */
@@ -102,10 +97,10 @@ preorder(link *l, char *ppath)
 }
 
 static int
-printable(node *n)
+printable(Node *n)
 {
-	node *ncp;
-	link *l;
+	Node *ncp;
+	Link *l;
 
 	if (n->n_flag & PRINTED)
 		return 0;
@@ -155,9 +150,9 @@ printable(node *n)
 }
 
 static void
-setpath(link *l, char *ppath, char *npath)
+setpath(Link *l, char *ppath, char *npath)
 {
-	node *next, *parent;
+	Node *next, *parent;
 	char netchar;
 
 	next = l->l_to;
@@ -221,9 +216,9 @@ setpath(link *l, char *ppath, char *npath)
 }
 
 static char *
-hostpath(char *path, link *l, int netchar)
+hostpath(char *path, Link *l, int netchar)
 {
-	node *prev;
+	Node *prev;
 
 	prev = l->l_to->n_parent;
 	if (NETDIR(l) == LLEFT) {
@@ -259,7 +254,7 @@ hostpath(char *path, link *l, int netchar)
 }
 
 static void
-printhost(node *n, char *path, Cost cost)
+printhost(Node *n, char *path, Cost cost)
 {
 	if (n->n_flag & PRINTED)
 		die("printhost called twice");
@@ -275,9 +270,9 @@ printhost(node *n, char *path, Cost cost)
 }
 
 static void
-printdomain(node *n, char *path, Cost cost)
+printdomain(Node *n, char *path, Cost cost)
 {
-	node *p;
+	Node *p;
 
 	if (n->n_flag & PRINTED)
 		die("printdomain called twice");

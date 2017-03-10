@@ -21,11 +21,11 @@ extern void yyerror(char *);
 extern int optind;
 extern char *Cfile, *Netchars, **Argv;
 extern int Lineno, Argc;
-extern node *Home;
+extern Node *Home;
 
 /* privates */
-static void fixnet(node *network, node *nlist, Cost cost, char netchar, char netdir);
-static void adjust(node *n, Cost cost);
+static void fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir);
+static void adjust(Node *n, Cost cost);
 static int yylex(void);
 static int yywrap(void);
 static int getword(char *str, int c);
@@ -36,12 +36,12 @@ static int Scanstate = NEWLINE;	/* scanner (yylex) state */
 %}
 
 %union {
-	node	*y_node;
+	Node	*y_node;
 	Cost	y_cost;
 	char	y_net;
 	char	*y_name;
 	struct {
-		node *ys_node;
+		Node *ys_node;
 		Cost ys_cost;
 		short ys_flag;
 		char ys_net;
@@ -77,7 +77,7 @@ map	:	/* empty */
 	;
 
 links	: host site cost {
-		struct link *l;
+		Link *l;
 
 		l = addlink($1, $2.ys_node, $3, $2.ys_net, $2.ys_dir);
 		if (GATEWAYED($2.ys_node))
@@ -86,7 +86,7 @@ links	: host site cost {
 			l->l_flag |= LTERMINAL;
 	  }			
 	| links ',' site cost {
-		struct link *l;
+		Link *l;
 
 		l = addlink($1, $3.ys_node, $4, $3.ys_net, $3.ys_dir);
 		if (GATEWAYED($3.ys_node))
@@ -149,7 +149,7 @@ nhost	: '='		{$$ = 0;	/* anonymous net */}
 
 nlist	: SITE		{$$ = addnode($1);}
 	| nlist ',' SITE {
-		node *n;
+		Node *n;
 
 		n = addnode($3);
 		if (n->n_net == 0) {
@@ -176,7 +176,7 @@ dlist	: delem
 	| dlist ','		/* benign error */
 	;
 
-delem	: SITE			{deadlink(addnode($1), (node *) 0);}
+delem	: SITE			{deadlink(addnode($1), (Node *) 0);}
 	| usite NET usite	{deadlink($1, $3);}
 	;
 
@@ -190,10 +190,10 @@ dellist	: delelem
 	;
 
 delelem	: SITE {
-		node *n;
+		Node *n;
 
 		n = addnode($1);
-		deletelink(n, (node *) 0);
+		deletelink(n, (Node *) 0);
 		n->n_flag |= ISPRIVATE;
 		/* reset Home if it's deleted */
 		if (n == Home)
@@ -259,10 +259,10 @@ yyerror(char *s)
  * multiple declarations.  this is a feechur, albeit a useless one.
  */
 static void
-fixnet(node *network, node *nlist, Cost cost, char netchar, char netdir)
+fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 {
-	node *member, *nextnet;
-	link *l;
+	Node *member, *nextnet;
+	Link *l;
 	static int netanon = 0;
 	char anon[25];
 
@@ -503,9 +503,9 @@ yywrap()
 }
 
 static void
-adjust(node *n, Cost cost)
+adjust(Node *n, Cost cost)
 {
-	link *l;
+	Link *l;
 
 	n->n_cost += cost;	/* cumulative */
 

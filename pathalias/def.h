@@ -9,9 +9,9 @@ static char *h_sccsid = "@(#)def.h	9.8 91/06/11";
 #include STDIO_H
 #include CTYPE_H
 typedef long Cost;
-typedef struct node node;
-typedef struct link link;
-typedef struct dom dom;
+typedef struct Node Node;
+typedef struct Link Link;
+typedef struct Dom Dom;
 
 #ifdef lint
 #define vprintf fprintf
@@ -58,18 +58,18 @@ typedef struct dom dom;
 #define n_parent  un2.nu_par
 
 /* WARNING: if > 2^16 nodes, type of n_tloc must change */
-struct node {
+struct Node {
 	char *n_name;		/* host name */
-	link *n_link;		/* adjacency list */
+	Link *n_link;		/* adjacency list */
 	Cost n_cost;		/* cost to this host */
 	union {
-		node *nu_net;	/* others in this network (parsing) */
-		node *nu_root;	/* root of net cycle (graph dumping) */
-		node *nu_copy;	/* circular copy list (mapping) */
+		Node *nu_net;	/* others in this network (parsing) */
+		Node *nu_root;	/* root of net cycle (graph dumping) */
+		Node *nu_copy;	/* circular copy list (mapping) */
 	} un1;
 	union {
-		node *nu_priv;	/* other privates in this file (parsing) */
-		node *nu_par;	/* parent in shortest path tree (mapping) */
+		Node *nu_priv;	/* other privates in this file (parsing) */
+		Node *nu_par;	/* parent in shortest path tree (mapping) */
 	} un2;
 	unsigned short n_tloc;	/* back ptr to heap/hash table */
 	unsigned short n_flag;	/* see manifests above */
@@ -102,12 +102,12 @@ struct node {
  */
 #define l_next un.lu_next
 #define l_from un.lu_from
-struct link {
-	node *l_to;		/* adjacent node */
+struct Link {
+	Node *l_to;		/* adjacent node */
 	Cost l_cost;		/* edge cost */
 	union {
-		link *lu_next;	/* rest of adjacency list (not tracing) */
-		node *lu_from;	/* source node (tracing) */
+		Link *lu_next;	/* rest of adjacency list (not tracing) */
+		Node *lu_from;	/* source node (tracing) */
 	} un;
 	short l_flag;		/* right/left syntax, flags */
 	char l_netop;		/* network operator */
@@ -140,8 +140,8 @@ struct link {
 };
 #endif /*DEBUG*/
 /* doubly linked list for known and unknown domains */
-struct dom {
-	dom *next;
-	dom *prev;
+struct Dom {
+	Dom *next;
+	Dom *prev;
 	char *name;
 };

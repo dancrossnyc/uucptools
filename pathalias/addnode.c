@@ -8,28 +8,21 @@ static char *sccsid = "@(#)addnode.c	9.7 91/05/23";
 #define EQ(n, s)	(*(n)->n_name == *(s) && strcmp((n)->n_name, (s)) == 0)
 
 /* exports */
-node *addnode(), *addprivate();
-void alias(), hashanalyze(), fixprivate();
-node **Table;			/* hash table ^ priority queue */
+Node **Table;			/* hash table ^ priority queue */
 long Tabsize;			/* size of Table */
 
 /* imports */
-extern link *addlink();
-extern node *newnode(), **newtable();
-extern char *strsave();
 extern int Iflag, Tflag, Vflag, InetFlag;
-extern node **Table, *Home;
+extern Node **Table, *Home;
 extern long Ncount, Tabsize;
 extern char **Argv;
-extern void atrace(), die(), freetable();
-extern int strcmp();
 
 /* privates */
 static void crcinit(), rehash(), lowercase();
 static long fold();
 static long hash();
-static node *isprivate();
-static node *Private;		/* list of private nodes in current input file */
+static Node *isprivate();
+static Node *Private;		/* list of private nodes in current input file */
 /*
  * these numbers are chosen because:
  *	-> they are prime,
@@ -48,11 +41,11 @@ static long Primes[] = {
 static int Tabindex;
 static long Tab128;		/* Tabsize * 128 */
 
-node *
+Node *
 addnode(char *name)
 {
 	long i;
-	node *n;
+	Node *n;
 	char *dot;
 
 	if (Iflag)
@@ -80,9 +73,9 @@ addnode(char *name)
 }
 
 void
-alias(node *n1, node *n2)
+alias(Node *n1, Node *n2)
 {
-	link *l;
+	Link *l;
 
 	if (ISADOMAIN(n1) && ISADOMAIN(n2)) {
 		fprintf(stderr, "%s: domain alias %s = %s is illegal\n",
@@ -167,7 +160,7 @@ hash(char *name, int unique)
 {
 	long probe;
 	long hash2;
-	node *n;
+	Node *n;
 
 	if (isfull(Ncount)) {
 		if (Tabsize == 0) {	/* first time */
@@ -207,7 +200,7 @@ hash(char *name, int unique)
 static void
 rehash(void)
 {
-	node **otable, **optr;
+	Node **otable, **optr;
 	long probe;
 	long osize;
 
@@ -329,10 +322,10 @@ lowercase(char *s)
 /*
  * this might need change if privates catch on
  */
-static node *
+static Node *
 isprivate(char *name)
 {
-	node *n;
+	Node *n;
 
 	for (n = Private; n != 0; n = n->n_private)
 		if (strcmp(name, n->n_name) == 0)
@@ -341,10 +334,10 @@ isprivate(char *name)
 }
 
 /*  Add a private node so private that nobody can find it.  */
-node *
+Node *
 addhidden(char *name)
 {
-	node *n;
+	Node *n;
 	int i;
 	if (Iflag)
 		lowercase(name);
@@ -364,7 +357,7 @@ addhidden(char *name)
 void
 fixprivate(void)
 {
-	node *n, *next;
+	Node *n, *next;
 	long i;
 
 	for (n = Private; n != 0; n = next) {
@@ -381,10 +374,10 @@ fixprivate(void)
 	Private = 0;
 }
 
-node *
+Node *
 addprivate(char *name)
 {
-	node *n;
+	Node *n;
 
 	if (Iflag)
 		lowercase(name);

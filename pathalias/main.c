@@ -3,12 +3,6 @@
 static char *sccsid = "@(#)main.c	9.8 91/06/11";
 #endif
 
-#ifndef VMS
-#define	MAIN	main
-#else
-#define	MAIN	XXmain
-#endif
-
 #include "def.h"
 
 /* exports */
@@ -16,7 +10,7 @@ char *Cfile;			/* current input file */
 char *Graphout;			/* file for dumping edges (-g option) */
 char *Linkout;			/* file for dumping shortest path tree */
 char **Argv;			/* external copy of argv (for input files) */
-node *Home;			/* node for local host */
+Node *Home;			/* node for local host */
 int Cflag;			/* print costs (-c option) */
 int Dflag;			/* penalize routes beyond domains (-D option) */
 int Iflag;			/* ignore case (-i option) */
@@ -26,19 +20,11 @@ int Fflag;			/* print cost of first hop */
 int InetFlag;			/* local host is w/in scope of DNS (-I flag) */
 int Lineno = 1;			/* line number within current input file */
 int Argc;			/* external copy of argc (for input files) */
-extern void die();
-extern int tracelink();
 
 /* imports */
 extern char *optarg;
 extern int optind;
 extern long Lcount, Ncount;
-extern long allocation();
-extern void wasted(), mapit(), hashanalyze(), deadlink();
-extern char *local();
-extern node *addnode();
-extern int getopt(), yyparse();
-extern void printit();
 
 #define USAGE "usage: %s [-vciDfI] [-l localname] [-d deadlink] [-t tracelink] [-g edgeout] [-s treeout] [-a avoid] [files ...]\n"
 
@@ -65,7 +51,7 @@ main(int argc, char *argv[])
 				*bang++ = 0;
 				deadlink(addnode(optarg), addnode(bang));
 			} else
-				deadlink(addnode(optarg), (node *) 0);
+				deadlink(addnode(optarg), (Node *) 0);
 			break;
 		case 'D':	/* penalize routes beyond domains */
 			Dflag++;

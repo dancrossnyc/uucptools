@@ -13,7 +13,7 @@ extern int errno, Vflag;
 /* exports */
 
 /* privates */
-static dom *good, *bad;
+static Dom *good, *bad;
 
 /*
  * good and bad are passed by reference for move-to-front
@@ -44,9 +44,9 @@ isadomain(char *domain)
 }
 
 int
-ondomlist(dom **headp, char *domain)
+ondomlist(Dom **headp, char *domain)
 {
-	dom *d, *head = *headp;
+	Dom *d, *head = *headp;
 
 	for (d = head; d != 0; d = d->next) {
 		if (strcmp(d->name, domain) == 0) {
@@ -61,9 +61,9 @@ ondomlist(dom **headp, char *domain)
 
 
 int
-adddom(dom **headp, char *domain)
+adddom(Dom **headp, char *domain)
 {
-	dom *d, *head = *headp;
+	Dom *d, *head = *headp;
 
 	d = newdom();
 	d->next = head;
@@ -74,9 +74,9 @@ adddom(dom **headp, char *domain)
 }
 
 int
-movetofront(dom **headp, dom *d)
+movetofront(Dom **headp, Dom *d)
 {
-	dom *head = *headp;
+	Dom *head = *headp;
 
 	if (d->prev)
 		d->prev->next = d->next;
