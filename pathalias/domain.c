@@ -18,8 +18,8 @@ static dom *good, *bad;
 /*
  * good and bad are passed by reference for move-to-front
  */
-isadomain(domain)
-char *domain;
+int
+isadomain(char *domain)
 {
 
 	if (ondomlist(&good, domain)) {
@@ -43,9 +43,8 @@ char *domain;
 	}
 }
 
-ondomlist(headp, domain)
-dom **headp;
-char *domain;
+int
+ondomlist(dom **headp, char *domain)
 {
 	dom *d, *head = *headp;
 
@@ -61,9 +60,8 @@ char *domain;
 
 
 
-adddom(headp, domain)
-dom **headp;
-char *domain;
+int
+adddom(dom **headp, char *domain)
 {
 	dom *d, *head = *headp;
 
@@ -75,8 +73,8 @@ char *domain;
 	*headp = d;
 }
 
-movetofront(headp, d)
-dom **headp, *d;
+int
+movetofront(dom **headp, dom *d)
 {
 	dom *head = *headp;
 
@@ -94,8 +92,8 @@ dom **headp, *d;
 #include <sys/types.h>
 #include <arpa/nameser.h>
 
-nslookup(domain)
-char *domain;
+int
+nslookup(char *domain)
 {
 	register HEADER *hp;
 	register int n;
@@ -123,8 +121,8 @@ char *domain;
 }
 #else				/*!RESOLVER */
 /*ARGSUSED*/
-nslookup(domain)
-char *domain;
+int
+nslookup(char *domain)
 {
 	return 0;		/* i guess !?! */
 }

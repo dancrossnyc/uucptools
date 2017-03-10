@@ -15,8 +15,8 @@ char *Ofile = ALIASDB, *ProgName;
 
 #define USAGE "%s [-o dbmname] [-a] [file ...]\n"
 
-main(argc, argv)
-char *argv[];
+int
+main(int argc, char *argv[])
 {
 	char *ofptr;
 	int c, append = 0;
@@ -69,14 +69,14 @@ char *argv[];
 	exit(0);
 }
 
-dbfile(dbf)
-char *dbf;
+int
+dbfile(char *dbf)
 {
 	return (dbcreat(dbf, "dir") != 0 || dbcreat(dbf, "pag") != 0);
 }
 
-dbcreat(dbf, suffix)
-char *dbf, *suffix;
+int
+dbcreat(char *dbf, char *suffix)
 {
 	char buf[BUFSIZ];
 	int fd;
@@ -89,8 +89,8 @@ char *dbf, *suffix;
 }
 
 
-makedb(ifile)
-char *ifile;
+int
+makedb(char *ifile)
 {
 	char line[BUFSIZ];
 	datum key, val;
@@ -126,8 +126,8 @@ char *ifile;
 	}
 }
 
-perror_(str)
-char *str;
+int
+perror_(char *str)
 {
 	fprintf(stderr, "%s: ", ProgName);
 	perror(str);

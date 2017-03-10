@@ -154,8 +154,7 @@ register char **argv;
 }
 
 void
-die(s)
-char *s;
+die(char *s)
 {
 #ifdef DEBUG
 	extern int abort();

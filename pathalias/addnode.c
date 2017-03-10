@@ -49,8 +49,7 @@ static int Tabindex;
 static long Tab128;		/* Tabsize * 128 */
 
 node *
-addnode(name)
-register char *name;
+addnode(register char *name)
 {
 	register long i;
 	register node *n;
@@ -81,8 +80,7 @@ register char *name;
 }
 
 void
-alias(n1, n2)
-node *n1, *n2;
+alias(node *n1, node *n2)
 {
 	link *l;
 
@@ -127,7 +125,7 @@ node *n1, *n2;
 static long CrcTable[128];
 
 STATIC void
-crcinit()
+crcinit(void)
 {
 	register int i, j;
 	register long sum;
@@ -142,8 +140,7 @@ crcinit()
 }
 
 STATIC long
-fold(s)
-register char *s;
+fold(register char *s)
 {
 	register long sum = 0;
 	register int c;
@@ -166,9 +163,7 @@ register char *s;
 #define isfull(n)	((n) * 128 >= Tab128)
 
 STATIC long
-hash(name, unique)
-char *name;
-int unique;
+hash(char *name, int unique)
 {
 	register long probe;
 	register long hash2;
@@ -210,7 +205,7 @@ int unique;
 }
 
 STATIC void
-rehash()
+rehash(void)
 {
 	register node **otable, **optr;
 	register long probe;
@@ -243,7 +238,7 @@ rehash()
 }
 
 void
-hashanalyze()
+hashanalyze(void)
 #if 0
 {
 	long probe, hash2;
@@ -323,8 +318,7 @@ hashanalyze()
 
 /* convert to lower case in place */
 STATIC void
-lowercase(s)
-register char *s;
+lowercase(register char *s)
 {
 	do {
 		if (isupper(*s))
@@ -336,8 +330,7 @@ register char *s;
  * this might need change if privates catch on
  */
 STATIC node *
-isprivate(name)
-register char *name;
+isprivate(register char *name)
 {
 	register node *n;
 
@@ -349,8 +342,7 @@ register char *name;
 
 /*  Add a private node so private that nobody can find it.  */
 node *
-addhidden(name)
-register char *name;
+addhidden(register char *name)
 {
 	register node *n;
 	register int i;
@@ -370,7 +362,7 @@ register char *name;
 }
 
 void
-fixprivate()
+fixprivate(void)
 {
 	register node *n, *next;
 	register long i;
@@ -390,8 +382,7 @@ fixprivate()
 }
 
 node *
-addprivate(name)
-register char *name;
+addprivate(register char *name)
 {
 	register node *n;
 

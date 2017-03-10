@@ -28,11 +28,7 @@ static int Tracecount;
 #define LTRACE		if (Tflag) ltrace
 
 link *
-addlink(from, to, cost, netchar, netdir)
-node *from;
-register node *to;
-Cost cost;
-char netchar, netdir;
+addlink(node *from, register node *to, Cost cost, int netchar, int netdir)
 {
 	register link *l, *prev = 0;
 
@@ -89,8 +85,7 @@ char netchar, netdir;
 }
 
 void
-deadlink(nleft, nright)
-node *nleft, *nright;
+deadlink(node *nleft, node *nright)
 {
 	link *l, *lhold = 0, *lprev, *lnext;
 
@@ -137,9 +132,7 @@ node *nleft, *nright;
 }
 
 STATIC void
-netbits(l, netchar, netdir)
-register link *l;
-char netchar, netdir;
+netbits(register link *l, int netchar, int netdir)
 {
 	l->l_flag &= ~LDIR;
 	l->l_flag |= netdir;
@@ -147,8 +140,7 @@ char netchar, netdir;
 }
 
 int
-tracelink(arg)
-char *arg;
+tracelink(char *arg)
 {
 	char *bang;
 	link *l;
@@ -174,10 +166,7 @@ char *arg;
  */
 
 STATIC void
-ltrace(from, to, cost, netchar, netdir, message)
-node *from, *to;
-Cost cost;
-char netchar, netdir, *message;
+ltrace(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 {
 	link *l;
 	int i;
@@ -199,10 +188,7 @@ char netchar, netdir, *message;
 
 /* print a trace item */
 STATIC void
-ltrprint(from, to, cost, netchar, netdir, message)
-node *from, *to;
-Cost cost;
-char netchar, netdir, *message;
+ltrprint(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 {
 	char buf[256], *bptr = buf;
 
@@ -220,8 +206,7 @@ char netchar, netdir, *message;
 }
 
 void
-atrace(n1, n2)
-node *n1, *n2;
+atrace(node *n1, node *n2)
 {
 	link *l;
 	int i;
@@ -240,8 +225,7 @@ node *n1, *n2;
 }
 
 int
-maptrace(from, to)
-register node *from, *to;
+maptrace(register node *from, register node *to)
 {
 	register link *l;
 	register int i;
@@ -258,9 +242,7 @@ register node *from, *to;
 }
 
 void
-deletelink(from, to)
-node *from;
-node *to;
+deletelink(node *from, node *to)
 {
 	register link *l, *lnext;
 

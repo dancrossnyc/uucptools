@@ -30,7 +30,7 @@ STATIC int printable();
 #define PATHSIZE 512
 
 void
-printit()
+printit(void)
 {
 	link *l;
 	char pbuf[PATHSIZE];
@@ -57,9 +57,7 @@ printit()
  * preorder traversal of shortest path tree.
  */
 STATIC void
-preorder(l, ppath)
-register link *l;
-char *ppath;
+preorder(register link *l, char *ppath)
 {
 	register node *n;
 	node *ncp;		/* circular copy list */
@@ -104,8 +102,7 @@ char *ppath;
 }
 
 STATIC int
-printable(n)
-register node *n;
+printable(register node *n)
 {
 	node *ncp;
 	link *l;
@@ -158,9 +155,7 @@ register node *n;
 }
 
 STATIC void
-setpath(l, ppath, npath)
-link *l;
-register char *ppath, *npath;
+setpath(link *l, register char *ppath, register char *npath)
 {
 	register node *next, *parent;
 	char netchar;
@@ -226,10 +221,7 @@ register char *ppath, *npath;
 }
 
 STATIC char *
-hostpath(path, l, netchar)
-register char *path;
-register link *l;
-char netchar;
+hostpath(register char *path, register link *l, int netchar)
 {
 	register node *prev;
 
@@ -267,10 +259,7 @@ char netchar;
 }
 
 STATIC void
-printhost(n, path, cost)
-register node *n;
-char *path;
-Cost cost;
+printhost(register node *n, char *path, Cost cost)
 {
 	if (n->n_flag & PRINTED)
 		die("printhost called twice");
@@ -286,10 +275,7 @@ Cost cost;
 }
 
 STATIC void
-printdomain(n, path, cost)
-register node *n;
-char *path;
-Cost cost;
+printdomain(register node *n, char *path, Cost cost)
 {
 	node *p;
 

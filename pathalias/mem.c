@@ -25,7 +25,7 @@ static link *Lcache;
 static unsigned int Memwaste;
 
 link *
-newlink()
+newlink(void)
 {
 	register link *rval;
 
@@ -40,15 +40,14 @@ newlink()
 
 /* caution: this destroys the contents of l_next */
 void
-freelink(l)
-link *l;
+freelink(link *l)
 {
 	l->l_next = Lcache;
 	Lcache = l;
 }
 
 node *
-newnode()
+newnode(void)
 {
 	register node *rval;
 
@@ -59,7 +58,7 @@ newnode()
 }
 
 dom *
-newdom()
+newdom(void)
 {
 	register dom *rval;
 
@@ -71,8 +70,7 @@ newdom()
 
 
 char *
-strsave(s)
-char *s;
+strsave(char *s)
 {
 	register char *r;
 
@@ -94,8 +92,7 @@ register long len;
 #endif				/*strclear */
 
 node **
-newtable(size)
-long size;
+newtable(long size)
 {
 	register node **rval;
 
@@ -107,9 +104,7 @@ long size;
 }
 
 void
-freetable(t, size)
-node **t;
-long size;
+freetable(node **t, long size)
 {
 #ifdef MYMALLOC
 	STATIC void addtoheap();
@@ -121,7 +116,7 @@ long size;
 }
 
 STATIC void
-nomem()
+nomem(void)
 {
 #ifdef DEBUG
 	static char epitaph[128];
@@ -135,7 +130,7 @@ nomem()
 
 /* data space allocation -- main sets `dataspace' very early */
 long
-allocation()
+allocation(void)
 {
 #ifdef DEBUG
 	static char *dataspace;
@@ -156,7 +151,7 @@ allocation()
 
 /* how much memory has been wasted? */
 void
-wasted()
+wasted(void)
 {
 	if (Memwaste == 0)
 		return;
@@ -178,7 +173,7 @@ STATIC int align();
 /* allocate in MBUFSIZ chunks.  4k works ok (less 16 for malloc quirks). */
 #define MBUFSIZ (4 * 1024 - 16)
 
-/* 
+/*
  * mess with ALIGN at your peril.  longword (== 0 mod 4)
  * alignment seems to work everywhere.
  */
@@ -194,9 +189,7 @@ struct heap {
 static heap *Mheap;		/* not to be confused with a priority queue */
 
 STATIC void
-addtoheap(p, size)
-char *p;
-long size;
+addtoheap(char *p, long size)
 {
 	int adjustment;
 	heap *pheap;
@@ -220,12 +213,11 @@ long size;
  *	strclear can be faster.
  *
  * free is ignored, except for very large objects,
- * which are returned to the heap with addtoheap(). 
+ * which are returned to the heap with addtoheap().
  */
 
 char *
-mymalloc(n)
-register unsigned int n;
+mymalloc(register unsigned int n)
 {
 	static unsigned int size;	/* how much do we have on hand? */
 	static char *mstash;	/* where is it? */
@@ -268,8 +260,7 @@ register unsigned int n;
  * n mod 2^ALIGN
  */
 STATIC int
-align(n)
-char *n;
+align(char *n)
 {
 	register int abits;	/* misalignment bits in n */
 

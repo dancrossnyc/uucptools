@@ -1,17 +1,5 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)local.c	9.3 91/06/11";
-#endif				/* lint */
-
-#include "config.h"
-
-#include STDIO_H
-
-#ifdef	UNAME
-#include <sys/utsname.h>
-
-char *
-local()
+__END_DECLS char *
+local(void)
 {
 	static struct utsname utsname;
 	extern int uname();
@@ -23,7 +11,7 @@ local()
 #else				/* !UNAME */
 
 char *
-local()
+local(void)
 {
 	static char lname[64];
 	extern int gethostname();
@@ -36,9 +24,7 @@ local()
 #ifndef GETHOSTNAME
 
 STATIC int
-gethostname(name, len)
-char *name;
-int len;
+gethostname(char *name, int len)
 {
 	FILE *whoami;
 	char *ptr;

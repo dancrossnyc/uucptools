@@ -34,8 +34,7 @@ STATIC link *lcopy();
  * up toward the high end.  make room!  make room!
  */
 long
-pack(low, high)
-long low, high;
+pack(long low, long high)
 {
 	long hole, next;
 
@@ -56,7 +55,7 @@ long low, high;
 }
 
 void
-resetnodes()
+resetnodes(void)
 {
 	register long i;
 	register node *n;
@@ -77,7 +76,7 @@ resetnodes()
 }
 
 void
-dumpgraph()
+dumpgraph(void)
 {
 	register long i;
 	register node *n;
@@ -105,8 +104,7 @@ dumpgraph()
 }
 
 STATIC void
-dumpnode(from)
-register node *from;
+dumpnode(register node *from)
 {
 	register node *to;
 	register link *l;
@@ -164,7 +162,7 @@ register node *from;
 }
 
 /*
- * remove cycles in net definitions. 
+ * remove cycles in net definitions.
  *
  * depth-first search
  *
@@ -174,7 +172,7 @@ register node *from;
  * portion of the dfs tree).
  */
 STATIC void
-untangle()
+untangle(void)
 {
 	register long i;
 	register node *n;
@@ -188,8 +186,7 @@ untangle()
 }
 
 STATIC void
-dfs(n)
-register node *n;
+dfs(register node *n)
 {
 	register link *l;
 	register node *next;
@@ -211,7 +208,7 @@ register node *n;
 }
 
 void
-showlinks()
+showlinks(void)
 {
 	register link *l;
 	register node *n;
@@ -247,9 +244,7 @@ showlinks()
 #define NEWP 0
 #define OLDP 1
 int
-tiebreaker(n, newp)
-node *n;
-register node *newp;
+tiebreaker(node *n, register node *newp)
 {
 	register char *opname, *npname, *name;
 	register node *oldp;
@@ -309,8 +304,7 @@ register node *newp;
 }
 
 STATIC int
-height(n)
-register node *n;
+height(register node *n)
 {
 	register int i = 0;
 
@@ -333,9 +327,7 @@ register node *n;
 		      && !((n)->n_copy->n_flag & NALIAS) \
 		      && !((l)->l_flag & LALIAS))
 node *
-ncopy(parent, l)
-register node *parent;
-register link *l;
+ncopy(register node *parent, register link *l)
 {
 	register node *n, *ncp;
 
@@ -377,8 +369,7 @@ register link *l;
  * why copy any links other than aliases?  hmmm ...
  */
 STATIC link *
-lcopy(parent, n)
-register node *parent, *n;
+lcopy(register node *parent, register node *n)
 {
 	register link *l, *lcp;
 	link *first = 0, *last = 0;

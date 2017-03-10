@@ -46,7 +46,7 @@ STATIC node *mappedcopy();
 
 /* transform the graph to a shortest-path tree by marking tree edges */
 void
-mapit()
+mapit(void)
 {
 	register node *n;
 	register link *l;
@@ -120,8 +120,7 @@ mapit()
 }
 
 STATIC void
-heapchildren(n)
-register node *n;
+heapchildren(register node *n)
 {
 	register link *l;
 	register node *next;
@@ -195,8 +194,7 @@ register node *n;
  * heap next -- it will happen over and over and over and ...
  */
 STATIC int
-skipterminalalias(n, next)
-node *n, *next;
+skipterminalalias(node *n, node *next)
 {
 
 	while (n->n_flag & NALIAS) {
@@ -214,11 +212,12 @@ node *n, *next;
  * if tracing is turned on, report only if this node is being skipped.
  */
 STATIC int
-skiplink(l, parent, cost, trace)
-link *l;			/* new link to this node */
-node *parent;			/* (potential) new parent of this node */
-register Cost cost;		/* new cost to this node */
-int trace;			/* trace this link? */
+skiplink(
+    link *l,			/* new link to this node */
+    node *parent,			/* (potential) new parent of this node */
+    register Cost cost,		/* new cost to this node */
+    int trace			/* trace this link? */
+)
 {
 	register node *n;	/* this node */
 	register link *lheap;	/* old link to this node */
@@ -269,9 +268,7 @@ int trace;			/* trace this link? */
 
 /* compute cost to next (l->l_to) via prev */
 STATIC Cost
-costof(prev, l)
-register node *prev;
-register link *l;
+costof(register node *prev, register link *l)
 {
 	register node *next;
 	register Cost cost;
@@ -311,8 +308,7 @@ register link *l;
 
 /* binary heap implementation of priority queue */
 STATIC void
-insert(l)
-link *l;
+insert(link *l)
 {
 	register node *n;
 
@@ -345,8 +341,7 @@ link *l;
  * i know this seems obscure, but it's harmless and cheap.  trust me.
  */
 STATIC void
-heapup(l)
-link *l;
+heapup(link *l)
 {
 	register long cindx, pindx;	/* child, parent indices */
 	register Cost cost;
@@ -378,7 +373,7 @@ link *l;
 
 /* extract min (== Heap[1]) from heap */
 STATIC link *
-min_node()
+min_node(void)
 {
 	link *rval, *lastlink;
 	register link **rheap;
@@ -410,8 +405,7 @@ min_node()
  */
 
 STATIC void
-heapdown(l)
-link *l;
+heapdown(link *l)
 {
 	register long pindx, cindx;
 	register link **rheap = Heap;	/* in register -- heavily used */
@@ -461,8 +455,7 @@ link *l;
 
 /* exchange Heap[i] and Heap[j] pointers */
 STATIC void
-heapswap(i, j)
-long i, j;
+heapswap(long i, long j)
 {
 	register link *temp, **rheap;
 
@@ -476,8 +469,7 @@ long i, j;
 
 /* return 1 if n is already de-hashed (n_tloc < Hashpart), 0 o.w. */
 STATIC int
-dehash(n)
-register node *n;
+dehash(register node *n)
 {
 	if (n->n_tloc < Hashpart)
 		return 1;
@@ -502,7 +494,7 @@ register node *n;
  * beats me why people want their error output in their map databases.
  */
 STATIC void
-backlinks()
+backlinks(void)
 {
 	register link *l;
 	register node *n, *child;
@@ -560,8 +552,7 @@ backlinks()
 
 /* find a mapped copy of n if it exists */
 STATIC node *
-mappedcopy(n)
-register node *n;
+mappedcopy(register node *n)
 {
 	register node *ncp;
 
@@ -578,8 +569,7 @@ register node *n;
  * so reset the state bits for l->l_to.
  */
 STATIC void
-setheapbits(l)
-register link *l;
+setheapbits(register link *l)
 {
 	register node *n;
 	register node *parent;
@@ -604,10 +594,7 @@ register link *l;
 }
 
 STATIC void
-mtracereport(from, l, excuse)
-node *from;
-link *l;
-char *excuse;
+mtracereport(node *from, link *l, char *excuse)
 {
 	node *to = l->l_to;
 
@@ -625,8 +612,7 @@ char *excuse;
 }
 
 STATIC void
-otracereport(n)
-node *n;
+otracereport(node *n)
 {
 	if (n->n_parent)
 		trprint(stderr, n->n_parent);
