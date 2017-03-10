@@ -490,12 +490,13 @@ yywrap()
 	fixprivate();	/* munge private host definitions */
 	Lineno = 1;
 	while (optind < Argc) {
-		if (freopen((Cfile = Argv[optind++]), "r", stdin) != 0)
+		if (freopen((Cfile = Argv[optind++]), "r", stdin) != NULL)
 			return 0;
 		snprintf(errbuf, sizeof errbuf, "%s: %s", Argv[0], Cfile);
 		perror(errbuf);
 	}
-	freopen("/dev/null", "r", stdin);
+	if (freopen("/dev/null", "r", stdin) == NULL)
+		die("freopen /dev/null to stdin failed");
 	return -1;
 }
 

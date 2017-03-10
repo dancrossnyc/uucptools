@@ -97,9 +97,10 @@ main(int argc, char *argv[])
 	}
 	argv += optind;		/* kludge for yywrap() */
 
-	if (*argv)
-		freopen(NULL_DEVICE, "r", stdin);
-	else
+	if (*argv) {
+		if (freopen(NULL_DEVICE, "r", stdin) == NULL)
+			die("cannot reopen stdin");
+	} else
 		Cfile = "[stdin]";
 
 	if (!locname)
