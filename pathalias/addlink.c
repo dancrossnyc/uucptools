@@ -20,7 +20,7 @@ extern void yyerror(), die();
 extern int strcmp(), strlen();
 
 /* privates */
-STATIC void netbits(), ltrace(), ltrprint();
+static void netbits(), ltrace(), ltrprint();
 static link *Trace[NTRACE];
 static int Tracecount;
 
@@ -28,9 +28,9 @@ static int Tracecount;
 #define LTRACE		if (Tflag) ltrace
 
 link *
-addlink(node *from, register node *to, Cost cost, int netchar, int netdir)
+addlink(node *from, node *to, Cost cost, int netchar, int netdir)
 {
-	register link *l, *prev = 0;
+	link *l, *prev = 0;
 
 	LTRACE(from, to, cost, netchar, netdir, "");
 	/*
@@ -131,8 +131,8 @@ deadlink(node *nleft, node *nright)
 	}
 }
 
-STATIC void
-netbits(register link *l, int netchar, int netdir)
+static void
+netbits(link *l, int netchar, int netdir)
 {
 	l->l_flag &= ~LDIR;
 	l->l_flag |= netdir;
@@ -165,7 +165,7 @@ tracelink(char *arg)
  * addresses, but that misses private nodes, so we use strcmp().
  */
 
-STATIC void
+static void
 ltrace(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 {
 	link *l;
@@ -187,7 +187,7 @@ ltrace(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 }
 
 /* print a trace item */
-STATIC void
+static void
 ltrprint(node *from, node *to, Cost cost, int netchar, int netdir, char *message)
 {
 	char buf[256], *bptr = buf;
@@ -225,10 +225,10 @@ atrace(node *n1, node *n2)
 }
 
 int
-maptrace(register node *from, register node *to)
+maptrace(node *from, node *to)
 {
-	register link *l;
-	register int i;
+	link *l;
+	int i;
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
@@ -244,7 +244,7 @@ maptrace(register node *from, register node *to)
 void
 deletelink(node *from, node *to)
 {
-	register link *l, *lnext;
+	link *l, *lnext;
 
 	l = from->n_link;
 

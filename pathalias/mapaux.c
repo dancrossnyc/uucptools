@@ -25,9 +25,9 @@ extern node *ncopy();
 
 /* privates */
 static FILE *Gstream;		/* for dumping graph */
-STATIC void dumpnode(), untangle(), dfs();
-STATIC int height();
-STATIC link *lcopy();
+static void dumpnode(), untangle(), dfs();
+static int height();
+static link *lcopy();
 
 /*
  * slide everything from Table[low] to Table[high]
@@ -57,8 +57,8 @@ pack(long low, long high)
 void
 resetnodes(void)
 {
-	register long i;
-	register node *n;
+	long i;
+	node *n;
 
 	for (i = Hashpart; i < Tabsize; i++)
 		if ((n = Table[i]) != 0) {
@@ -78,8 +78,8 @@ resetnodes(void)
 void
 dumpgraph(void)
 {
-	register long i;
-	register node *n;
+	long i;
+	node *n;
 
 	if ((Gstream = fopen(Graphout, "w")) == NULL) {
 		fprintf(stderr, "%s: ", Argv[0]);
@@ -103,11 +103,11 @@ dumpgraph(void)
 	}
 }
 
-STATIC void
-dumpnode(register node *from)
+static void
+dumpnode(node *from)
 {
-	register node *to;
-	register link *l;
+	node *to;
+	link *l;
 	link *lnet = 0, *ll, *lnext;
 
 	for (l = from->n_link; l; l = l->l_next) {
@@ -171,11 +171,11 @@ dumpnode(register node *from)
  * in the n_root field (which gets us closer to the root of this
  * portion of the dfs tree).
  */
-STATIC void
+static void
 untangle(void)
 {
-	register long i;
-	register node *n;
+	long i;
+	node *n;
 
 	for (i = Hashpart; i < Tabsize; i++) {
 		n = Table[i];
@@ -185,11 +185,11 @@ untangle(void)
 	}
 }
 
-STATIC void
-dfs(register node *n)
+static void
+dfs(node *n)
 {
-	register link *l;
-	register node *next;
+	link *l;
+	node *next;
 
 	n->n_flag |= INDFS;
 	n->n_root = n;
@@ -210,9 +210,9 @@ dfs(register node *n)
 void
 showlinks(void)
 {
-	register link *l;
-	register node *n;
-	register long i;
+	link *l;
+	node *n;
+	long i;
 	FILE *estream;
 
 	if ((estream = fopen(Linkout, "w")) == 0)
@@ -244,10 +244,10 @@ showlinks(void)
 #define NEWP 0
 #define OLDP 1
 int
-tiebreaker(node *n, register node *newp)
+tiebreaker(node *n, node *newp)
 {
-	register char *opname, *npname, *name;
-	register node *oldp;
+	char *opname, *npname, *name;
+	node *oldp;
 	int metric;
 
 	oldp = n->n_parent;
@@ -303,10 +303,10 @@ tiebreaker(node *n, register node *newp)
 	return OLDP;
 }
 
-STATIC int
-height(register node *n)
+static int
+height(node *n)
 {
-	register int i = 0;
+	int i = 0;
 
 	if (n == 0)
 		return 0;
@@ -327,9 +327,9 @@ height(register node *n)
 		      && !((n)->n_copy->n_flag & NALIAS) \
 		      && !((l)->l_flag & LALIAS))
 node *
-ncopy(register node *parent, register link *l)
+ncopy(node *parent, link *l)
 {
-	register node *n, *ncp;
+	node *n, *ncp;
 
 #ifdef DEBUG
 	if (Vflag > 1)
@@ -368,10 +368,10 @@ ncopy(register node *parent, register link *l)
  *
  * why copy any links other than aliases?  hmmm ...
  */
-STATIC link *
-lcopy(register node *parent, register node *n)
+static link *
+lcopy(node *parent, node *n)
 {
-	register link *l, *lcp;
+	link *l, *lcp;
 	link *first = 0, *last = 0;
 
 	for (l = n->n_link; l != 0; l = l->l_next) {

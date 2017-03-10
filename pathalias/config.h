@@ -96,11 +96,11 @@ extern void strclear();
 extern char *malloc();
 extern char *strcpy(), *index(), *rindex();
 
-#ifndef STATIC
+#ifndef static
 
 #ifdef DEBUG
-#define STATIC extern
+#define static extern
 #else /*DEBUG*/
-#define STATIC static
+#define static static
 #endif /*DEBUG*/
-#endif /*STATIC*/
+#endif /*static*/

@@ -28,8 +28,8 @@ extern int Lineno, Argc;
 extern node *Home;
 
 /* privates */
-STATIC void fixnet(), adjust();
-STATIC int yylex(), yywrap(), getword();
+static void fixnet(), adjust();
+static int yylex(), yywrap(), getword();
 static int Scanstate = NEWLINE;	/* scanner (yylex) state */
 
 /* flags for ys_flags */
@@ -272,13 +272,13 @@ yyerror(s)
  * note that members can have varying costs to a network, by suitable
  * multiple declarations.  this is a feechur, albeit a useless one.
  */
-STATIC void
+static void
 fixnet(network, nlist, cost, netchar, netdir)
-	register node *network;
+	node *network;
 	node *nlist;
 	Cost cost;
 	char netchar, netdir;
-{	register node *member, *nextnet;
+{	node *member, *nextnet;
 	link *l;
 	static int netanon = 0;
 	char anon[25];
@@ -337,13 +337,13 @@ static struct ctable {
 	{0, 0}
 };
 
-STATIC int
+static int
 yylex()
 {	static char retbuf[128];	/* for return to yacc part */
-	register int c;
-	register char *buf = retbuf;
-	register struct ctable *ct;
-	register Cost cost;
+	int c;
+	char *buf = retbuf;
+	struct ctable *ct;
+	Cost cost;
 	char errbuf[128];
 
 	if (feof(stdin) && yywrap())
@@ -464,10 +464,10 @@ continuation:
  * fill str with the next word in [0-9A-Za-z][-._0-9A-Za-z]+ or a quoted
  * string that contains no newline.  return -1 on failure or EOF, 0 o.w.
  */ 
-STATIC int
+static int
 getword(str, c)
-	register char *str;
-	register int c;
+	char *str;
+	int c;
 {
 	if (c == QUOTE) {
 		while ((c = getchar()) != QUOTE) {
@@ -504,7 +504,7 @@ yymore:
 	return 0;
 }
 
-STATIC int
+static int
 yywrap()
 {	char errbuf[100];
 
@@ -520,7 +520,7 @@ yywrap()
 	return -1;
 }
 
-STATIC void
+static void
 adjust(n, cost)
 	node *n;
 	Cost cost;

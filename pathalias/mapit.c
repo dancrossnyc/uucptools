@@ -37,19 +37,19 @@ extern node *ncopy();
 static long Heaphighwater;
 static link **Heap;
 
-STATIC void insert(), heapup(), heapdown(), heapswap(), backlinks();
-STATIC void setheapbits(), mtracereport(), heapchildren(), otracereport();
-STATIC link *min_node();
-STATIC int dehash(), skiplink(), skipterminalalias();
-STATIC Cost costof();
-STATIC node *mappedcopy();
+static void insert(), heapup(), heapdown(), heapswap(), backlinks();
+static void setheapbits(), mtracereport(), heapchildren(), otracereport();
+static link *min_node();
+static int dehash(), skiplink(), skipterminalalias();
+static Cost costof();
+static node *mappedcopy();
 
 /* transform the graph to a shortest-path tree by marking tree edges */
 void
 mapit(void)
 {
-	register node *n;
-	register link *l;
+	node *n;
+	link *l;
 
 	vprintf(stderr, "*** mapping\ttcount = %ld\n", Tcount);
 	Tflag = Tflag && Vflag;	/* tracing here only if verbose */
@@ -119,13 +119,13 @@ mapit(void)
 	}
 }
 
-STATIC void
-heapchildren(register node *n)
+static void
+heapchildren(node *n)
 {
-	register link *l;
-	register node *next;
-	register int mtrace;
-	register Cost cost;
+	link *l;
+	node *next;
+	int mtrace;
+	Cost cost;
 
 	for (l = n->n_link; l; l = l->l_next) {
 
@@ -193,7 +193,7 @@ heapchildren(register node *n)
  * for n.  if n was heaped because of a copy (ALTEREGO) of next, don't
  * heap next -- it will happen over and over and over and ...
  */
-STATIC int
+static int
 skipterminalalias(node *n, node *next)
 {
 
@@ -211,16 +211,16 @@ skipterminalalias(node *n, node *next)
  *
  * if tracing is turned on, report only if this node is being skipped.
  */
-STATIC int
+static int
 skiplink(
     link *l,			/* new link to this node */
-    node *parent,			/* (potential) new parent of this node */
-    register Cost cost,		/* new cost to this node */
+    node *parent,		/* (potential) new parent of this node */
+    Cost cost,			/* new cost to this node */
     int trace			/* trace this link? */
 )
 {
-	register node *n;	/* this node */
-	register link *lheap;	/* old link to this node */
+	node *n;	/* this node */
+	link *lheap;	/* old link to this node */
 
 	n = l->l_to;
 
@@ -267,11 +267,11 @@ skiplink(
 }
 
 /* compute cost to next (l->l_to) via prev */
-STATIC Cost
-costof(register node *prev, register link *l)
+static Cost
+costof(node *prev, link *l)
 {
-	register node *next;
-	register Cost cost;
+	node *next;
+	Cost cost;
 
 	if (l->l_flag & LALIAS)
 		return prev->n_cost;	/* by definition */
@@ -307,10 +307,10 @@ costof(register node *prev, register link *l)
 }
 
 /* binary heap implementation of priority queue */
-STATIC void
+static void
 insert(link *l)
 {
-	register node *n;
+	node *n;
 
 	n = l->l_to;
 	if (n->n_flag & MAPPED)
@@ -340,12 +340,12 @@ insert(link *l)
  *
  * i know this seems obscure, but it's harmless and cheap.  trust me.
  */
-STATIC void
+static void
 heapup(link *l)
 {
-	register long cindx, pindx;	/* child, parent indices */
-	register Cost cost;
-	register node *child, *parent;
+	long cindx, pindx;	/* child, parent indices */
+	Cost cost;
+	node *child, *parent;
 
 	child = l->l_to;
 
@@ -372,11 +372,11 @@ heapup(link *l)
 }
 
 /* extract min (== Heap[1]) from heap */
-STATIC link *
+static link *
 min_node(void)
 {
 	link *rval, *lastlink;
-	register link **rheap;
+	link **rheap;
 
 	if (Nheap == 0)
 		return 0;
@@ -404,11 +404,11 @@ min_node(void)
  * near the root.  this helps tiebreaker() shun domain routes.
  */
 
-STATIC void
+static void
 heapdown(link *l)
 {
-	register long pindx, cindx;
-	register link **rheap = Heap;	/* in register -- heavily used */
+	long pindx, cindx;
+	link **rheap = Heap;	/* in register -- heavily used */
 	node *child, *rchild, *parent;
 
 	pindx = l->l_to->n_tloc;
@@ -454,10 +454,10 @@ heapdown(link *l)
 }
 
 /* exchange Heap[i] and Heap[j] pointers */
-STATIC void
+static void
 heapswap(long i, long j)
 {
-	register link *temp, **rheap;
+	link *temp, **rheap;
 
 	rheap = Heap;		/* heavily used -- put in register */
 	temp = rheap[i];
@@ -468,8 +468,8 @@ heapswap(long i, long j)
 }
 
 /* return 1 if n is already de-hashed (n_tloc < Hashpart), 0 o.w. */
-STATIC int
-dehash(register node *n)
+static int
+dehash(node *n)
 {
 	if (n->n_tloc < Hashpart)
 		return 1;
@@ -493,11 +493,11 @@ dehash(register node *n)
  *
  * beats me why people want their error output in their map databases.
  */
-STATIC void
+static void
 backlinks(void)
 {
-	register link *l;
-	register node *n, *child;
+	link *l;
+	node *n, *child;
 	node *nomap;
 	long i;
 
@@ -551,10 +551,10 @@ backlinks(void)
 }
 
 /* find a mapped copy of n if it exists */
-STATIC node *
-mappedcopy(register node *n)
+static node *
+mappedcopy(node *n)
 {
-	register node *ncp;
+	node *ncp;
 
 	if (n->n_flag & MAPPED)
 		return n;
@@ -568,11 +568,11 @@ mappedcopy(register node *n)
  * l has just been added or changed in the heap,
  * so reset the state bits for l->l_to.
  */
-STATIC void
-setheapbits(register link *l)
+static void
+setheapbits(link *l)
 {
-	register node *n;
-	register node *parent;
+	node *n;
+	node *parent;
 
 	n = l->l_to;
 	parent = n->n_parent;
@@ -593,7 +593,7 @@ setheapbits(register link *l)
 		n->n_flag |= HASRIGHT;
 }
 
-STATIC void
+static void
 mtracereport(node *from, link *l, char *excuse)
 {
 	node *to = l->l_to;
@@ -611,7 +611,7 @@ mtracereport(node *from, link *l, char *excuse)
 	putc('\n', stderr);
 }
 
-STATIC void
+static void
 otracereport(node *n)
 {
 	if (n->n_parent)
@@ -672,7 +672,7 @@ chkheap(i)
 
 /* this isn't much use */
 #if 0
-STATIC int
+static int
 chkgap()
 {
 	static int gap = -1;

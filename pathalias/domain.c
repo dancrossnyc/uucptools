@@ -95,8 +95,8 @@ movetofront(dom **headp, dom *d)
 int
 nslookup(char *domain)
 {
-	register HEADER *hp;
-	register int n;
+	HEADER *hp;
+	int n;
 	char q[PACKETSZ], a[PACKETSZ];	/* query, answer */
 	char buf[PACKETSZ + 1];
 

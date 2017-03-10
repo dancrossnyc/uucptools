@@ -20,14 +20,14 @@ extern char *sbrk();
 #endif
 
 /* privates */
-STATIC void nomem();
+static void nomem();
 static link *Lcache;
 static unsigned int Memwaste;
 
 link *
 newlink(void)
 {
-	register link *rval;
+	link *rval;
 
 	if (Lcache) {
 		rval = Lcache;
@@ -49,7 +49,7 @@ freelink(link *l)
 node *
 newnode(void)
 {
-	register node *rval;
+	node *rval;
 
 	if ((rval = (node *) calloc(1, sizeof(node))) == 0)
 		nomem();
@@ -60,7 +60,7 @@ newnode(void)
 dom *
 newdom(void)
 {
-	register dom *rval;
+	dom *rval;
 
 	if ((rval = (dom *) calloc(1, sizeof(dom))) == 0)
 		nomem();
@@ -72,7 +72,7 @@ newdom(void)
 char *
 strsave(char *s)
 {
-	register char *r;
+	char *r;
 
 	if ((r = malloc((unsigned)strlen(s) + 1)) == 0)
 		nomem();
@@ -80,21 +80,10 @@ strsave(char *s)
 	return r;
 }
 
-#ifndef strclear
-void
-strclear(str, len)
-register char *str;
-register long len;
-{
-	while (--len >= 0)
-		*str++ = 0;
-}
-#endif				/*strclear */
-
 node **
 newtable(long size)
 {
-	register node **rval;
+	node **rval;
 
 	if ((rval =
 	    (node **) calloc(1,
@@ -107,7 +96,7 @@ void
 freetable(node **t, long size)
 {
 #ifdef MYMALLOC
-	STATIC void addtoheap();
+	static void addtoheap();
 
 	addtoheap((char *)t, size * sizeof(node *));
 #else
@@ -115,7 +104,7 @@ freetable(node **t, long size)
 #endif
 }
 
-STATIC void
+static void
 nomem(void)
 {
 #ifdef DEBUG
@@ -168,7 +157,7 @@ wasted(void)
 extern char *malloc(), *calloc();
 
 /* private */
-STATIC int align();
+static int align();
 
 /* allocate in MBUFSIZ chunks.  4k works ok (less 16 for malloc quirks). */
 #define MBUFSIZ (4 * 1024 - 16)
@@ -188,7 +177,7 @@ struct heap {
 
 static heap *Mheap;		/* not to be confused with a priority queue */
 
-STATIC void
+static void
 addtoheap(char *p, long size)
 {
 	int adjustment;
@@ -217,11 +206,11 @@ addtoheap(char *p, long size)
  */
 
 char *
-mymalloc(register unsigned int n)
+mymalloc(unsigned int n)
 {
 	static unsigned int size;	/* how much do we have on hand? */
 	static char *mstash;	/* where is it? */
-	register char *rval;
+	char *rval;
 
 	if (n >= 1024) {	/* for hash table */
 		rval = malloc(n);	/* aligned */
@@ -259,10 +248,10 @@ mymalloc(register unsigned int n)
  * what's the (mis-)alignment of n?  return the complement of
  * n mod 2^ALIGN
  */
-STATIC int
+static int
 align(char *n)
 {
-	register int abits;	/* misalignment bits in n */
+	int abits;	/* misalignment bits in n */
 
 	abits = (int)n & ~(0xff << ALIGN) & 0xff;
 	if (abits == 0)

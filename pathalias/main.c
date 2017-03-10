@@ -42,12 +42,11 @@ extern void printit();
 
 #define USAGE "usage: %s [-vciDfI] [-l localname] [-d deadlink] [-t tracelink] [-g edgeout] [-s treeout] [-a avoid] [files ...]\n"
 
-MAIN(argc, argv)
-register int argc;
-register char **argv;
+int
+main(int argc, char *argv[])
 {
 	char *locname = 0, *bang;
-	register int c;
+	int c;
 	int errflg = 0;
 
 	setbuf(stderr, (char *)0);

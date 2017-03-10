@@ -22,9 +22,9 @@ extern int strlen();
 
 /* privates */
 static link *Ancestor;		/* for -f option */
-STATIC void preorder(), setpath(), printhost(), printdomain();
-STATIC char *hostpath();
-STATIC int printable();
+static void preorder(), setpath(), printhost(), printdomain();
+static char *hostpath();
+static int printable();
 
 /* in practice, even the longest paths are < 100 bytes */
 #define PATHSIZE 512
@@ -56,10 +56,10 @@ printit(void)
 /*
  * preorder traversal of shortest path tree.
  */
-STATIC void
-preorder(register link *l, char *ppath)
+static void
+preorder(link *l, char *ppath)
 {
-	register node *n;
+	node *n;
 	node *ncp;		/* circular copy list */
 	Cost cost;
 	char npath[PATHSIZE];
@@ -101,8 +101,8 @@ preorder(register link *l, char *ppath)
 	}
 }
 
-STATIC int
-printable(register node *n)
+static int
+printable(node *n)
 {
 	node *ncp;
 	link *l;
@@ -154,10 +154,10 @@ printable(register node *n)
 	return 1;
 }
 
-STATIC void
-setpath(link *l, register char *ppath, register char *npath)
+static void
+setpath(link *l, char *ppath, char *npath)
 {
-	register node *next, *parent;
+	node *next, *parent;
 	char netchar;
 
 	next = l->l_to;
@@ -220,10 +220,10 @@ setpath(link *l, register char *ppath, register char *npath)
 	}
 }
 
-STATIC char *
-hostpath(register char *path, register link *l, int netchar)
+static char *
+hostpath(char *path, link *l, int netchar)
 {
-	register node *prev;
+	node *prev;
 
 	prev = l->l_to->n_parent;
 	if (NETDIR(l) == LLEFT) {
@@ -258,8 +258,8 @@ hostpath(register char *path, register link *l, int netchar)
 	return path;
 }
 
-STATIC void
-printhost(register node *n, char *path, Cost cost)
+static void
+printhost(node *n, char *path, Cost cost)
 {
 	if (n->n_flag & PRINTED)
 		die("printhost called twice");
@@ -274,8 +274,8 @@ printhost(register node *n, char *path, Cost cost)
 	}
 }
 
-STATIC void
-printdomain(register node *n, char *path, Cost cost)
+static void
+printdomain(node *n, char *path, Cost cost)
 {
 	node *p;
 

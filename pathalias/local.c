@@ -23,7 +23,7 @@ local(void)
 
 #ifndef GETHOSTNAME
 
-STATIC int
+static int
 gethostname(char *name, int len)
 {
 	FILE *whoami;

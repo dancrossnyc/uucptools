@@ -25,10 +25,10 @@ extern void atrace(), die(), freetable();
 extern int strcmp();
 
 /* privates */
-STATIC void crcinit(), rehash(), lowercase();
-STATIC long fold();
-STATIC long hash();
-STATIC node *isprivate();
+static void crcinit(), rehash(), lowercase();
+static long fold();
+static long hash();
+static node *isprivate();
 static node *Private;		/* list of private nodes in current input file */
 /*
  * these numbers are chosen because:
@@ -49,10 +49,10 @@ static int Tabindex;
 static long Tab128;		/* Tabsize * 128 */
 
 node *
-addnode(register char *name)
+addnode(char *name)
 {
-	register long i;
-	register node *n;
+	long i;
+	node *n;
 	char *dot;
 
 	if (Iflag)
@@ -124,11 +124,11 @@ alias(node *n1, node *n2)
 
 static long CrcTable[128];
 
-STATIC void
+static void
 crcinit(void)
 {
-	register int i, j;
-	register long sum;
+	int i, j;
+	long sum;
 
 	for (i = 0; i < 128; i++) {
 		sum = 0;
@@ -139,11 +139,11 @@ crcinit(void)
 	}
 }
 
-STATIC long
-fold(register char *s)
+static long
+fold(char *s)
 {
-	register long sum = 0;
-	register int c;
+	long sum = 0;
+	int c;
 
 	while ((c = *s++) != 0)
 		sum = (sum >> 7) ^ CrcTable[(sum ^ c) & 0x7f];
@@ -162,12 +162,12 @@ fold(register char *s)
 #define HIGHWATER	79L
 #define isfull(n)	((n) * 128 >= Tab128)
 
-STATIC long
+static long
 hash(char *name, int unique)
 {
-	register long probe;
-	register long hash2;
-	register node *n;
+	long probe;
+	long hash2;
+	node *n;
 
 	if (isfull(Ncount)) {
 		if (Tabsize == 0) {	/* first time */
@@ -204,11 +204,11 @@ hash(char *name, int unique)
 	return probe;		/* brand new */
 }
 
-STATIC void
+static void
 rehash(void)
 {
-	register node **otable, **optr;
-	register long probe;
+	node **otable, **optr;
+	long probe;
 	long osize;
 
 #ifdef DEBUG
@@ -317,8 +317,8 @@ hashanalyze(void)
 #endif
 
 /* convert to lower case in place */
-STATIC void
-lowercase(register char *s)
+static void
+lowercase(char *s)
 {
 	do {
 		if (isupper(*s))
@@ -329,10 +329,10 @@ lowercase(register char *s)
 /*
  * this might need change if privates catch on
  */
-STATIC node *
-isprivate(register char *name)
+static node *
+isprivate(char *name)
 {
-	register node *n;
+	node *n;
 
 	for (n = Private; n != 0; n = n->n_private)
 		if (strcmp(name, n->n_name) == 0)
@@ -342,10 +342,10 @@ isprivate(register char *name)
 
 /*  Add a private node so private that nobody can find it.  */
 node *
-addhidden(register char *name)
+addhidden(char *name)
 {
-	register node *n;
-	register int i;
+	node *n;
+	int i;
 	if (Iflag)
 		lowercase(name);
 
@@ -364,8 +364,8 @@ addhidden(register char *name)
 void
 fixprivate(void)
 {
-	register node *n, *next;
-	register long i;
+	node *n, *next;
+	long i;
 
 	for (n = Private; n != 0; n = next) {
 		n->n_flag |= ISPRIVATE;	/* overkill, but safe */
@@ -382,9 +382,9 @@ fixprivate(void)
 }
 
 node *
-addprivate(register char *name)
+addprivate(char *name)
 {
-	register node *n;
+	node *n;
 
 	if (Iflag)
 		lowercase(name);
