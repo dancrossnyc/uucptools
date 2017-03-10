@@ -1,7 +1,7 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)makedb.c	9.1 87/10/04";
-#endif /* lint */
+static char *sccsid = "@(#)makedb.c	9.1 87/10/04";
+#endif				/* lint */
 
 #include <stdio.h>
 #include "config.h"
@@ -16,15 +16,16 @@ char *Ofile = ALIASDB, *ProgName;
 #define USAGE "%s [-o dbmname] [-a] [file ...]\n"
 
 main(argc, argv)
-	char *argv[];
-{	char *ofptr;
+char *argv[];
+{
+	char *ofptr;
 	int c, append = 0;
 	extern int optind;
 	extern char *optarg;
 
 	ProgName = argv[0];
 	while ((c = getopt(argc, argv, "o:a")) != EOF)
-		switch(c) {
+		switch (c) {
 		case 'o':	/* dbm output file */
 			Ofile = optarg;
 			break;
@@ -46,7 +47,8 @@ main(argc, argv)
 		ofptr = Ofile;
 	if (strlen(ofptr) > 10) {
 		ofptr[10] = 0;
-		fprintf(stderr, "%s: using %s for dbm output\n", ProgName, Ofile);
+		fprintf(stderr, "%s: using %s for dbm output\n", ProgName,
+		    Ofile);
 	}
 
 	if (append == 0 && dbfile(Ofile) != 0) {
@@ -60,34 +62,37 @@ main(argc, argv)
 	}
 
 	if (optind == argc)
-		makedb((char *) 0);
-	else for ( ; optind < argc; optind++)
-		makedb(argv[optind]);
+		makedb((char *)0);
+	else
+		for (; optind < argc; optind++)
+			makedb(argv[optind]);
 	exit(0);
 }
 
 dbfile(dbf)
-	char *dbf;
+char *dbf;
 {
 	return (dbcreat(dbf, "dir") != 0 || dbcreat(dbf, "pag") != 0);
 }
 
 dbcreat(dbf, suffix)
-	char *dbf, *suffix;
-{	char buf[BUFSIZ];
+char *dbf, *suffix;
+{
+	char buf[BUFSIZ];
 	int fd;
 
-	(void) sprintf(buf, "%s.%s", dbf, suffix);
+	(void)sprintf(buf, "%s.%s", dbf, suffix);
 	if ((fd = creat(buf, 0666)) < 0)
-		return(-1);
-	(void) close(fd);
-	return(0);
+		return (-1);
+	(void)close(fd);
+	return (0);
 }
 
 
 makedb(ifile)
-	char *ifile;
-{	char line[BUFSIZ];
+char *ifile;
+{
+	char line[BUFSIZ];
 	datum key, val;
 
 	if (ifile && (freopen(ifile, "r", stdin) == NULL)) {
@@ -108,12 +113,12 @@ makedb(ifile)
 		op = index(line, '\t');
 		if (op != 0) {
 			*op++ = 0;
-			key.dsize = op - line;		/* 0 terminated */
+			key.dsize = op - line;	/* 0 terminated */
 			val.dptr = op;
-			val.dsize = end - op;		/* 0 terminated */
+			val.dsize = end - op;	/* 0 terminated */
 		} else {
-			key.dsize = end - line;		/* 0 terminated */
-			val.dptr = "\0";		/* why must i do this? */
+			key.dsize = end - line;	/* 0 terminated */
+			val.dptr = "\0";	/* why must i do this? */
 			val.dsize = 1;
 		}
 		if (store(key, val) < 0)
@@ -122,7 +127,7 @@ makedb(ifile)
 }
 
 perror_(str)
-	char	*str;
+char *str;
 {
 	fprintf(stderr, "%s: ", ProgName);
 	perror(str);

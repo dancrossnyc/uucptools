@@ -1,20 +1,20 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)mapit.c	9.16 92/08/25";
+static char *sccsid = "@(#)mapit.c	9.16 92/08/25";
 #endif
 
 #include "def.h"
 
-#define chkheap(i)	/* void */
-#define chkgap()	/* int */
+#define chkheap(i)		/* void */
+#define chkgap()		/* int */
 
 #define trprint(stream, n) \
 	fprintf((stream), (n)->n_flag & NTERMINAL ? "<%s>" : "%s", (n)->n_name)
 
 /* exports */
 /* invariant while mapping: Nheap < Hashpart */
-long Hashpart;		/* start of unreached nodes */
-long Nheap;		/* end of heap */
+long Hashpart;			/* start of unreached nodes */
+long Nheap;			/* end of heap */
 long NumNcopy, Nlink, NumLcopy;
 
 void mapit();
@@ -34,8 +34,8 @@ extern node *ncopy();
 
 
 /* privates */
-static long	Heaphighwater;
-static link	**Heap;
+static long Heaphighwater;
+static link **Heap;
 
 STATIC void insert(), heapup(), heapdown(), heapswap(), backlinks();
 STATIC void setheapbits(), mtracereport(), heapchildren(), otracereport();
@@ -47,11 +47,12 @@ STATIC node *mappedcopy();
 /* transform the graph to a shortest-path tree by marking tree edges */
 void
 mapit()
-{	register node *n;
+{
+	register node *n;
 	register link *l;
 
 	vprintf(stderr, "*** mapping\ttcount = %ld\n", Tcount);
-	Tflag = Tflag && Vflag;		/* tracing here only if verbose */
+	Tflag = Tflag && Vflag;	/* tracing here only if verbose */
 	/* re-use the hash table space for the heap */
 	Heap = (link **) Table;
 	Hashpart = pack(0L, Tabsize - 1);
@@ -67,7 +68,7 @@ mapit()
 	/* insert Home to get things started */
 	l = newlink();		/* link to get things started */
 	l->l_to = Home;
-	(void) dehash(Home);
+	(void)dehash(Home);
 	insert(l);
 
 	/* main mapping loop */
@@ -76,17 +77,21 @@ mapit()
 		while ((l = min_node()) != 0) {
 			l->l_flag |= LTREE;
 			n = l->l_to;
-			if (n->n_flag & MAPPED)		/* sanity check */
+			if (n->n_flag & MAPPED)	/* sanity check */
 				die("mapped node in heap");
 			if (Tflag && maptrace(n, n))
 				otracereport(n);	/* tracing */
-			chkheap(1); chkgap();		/* debugging */
+			chkheap(1);
+			chkgap();	/* debugging */
 			n->n_flag |= MAPPED;
 			heapchildren(n);	/* add children to heap */
 		}
-		vprintf(stderr, "heap hiwat %d\nalloc %ldk, ncopy = %ld, nlink = %ld, lcopy = %ld\n", Heaphighwater, allocation(), NumNcopy, Nlink, NumLcopy);
+		vprintf(stderr,
+		    "heap hiwat %d\nalloc %ldk, ncopy = %ld, nlink = %ld, lcopy = %ld\n",
+		    Heaphighwater, allocation(), NumNcopy, Nlink,
+		    NumLcopy);
 
-		if (Nheap != 0)		/* sanity check */
+		if (Nheap != 0)	/* sanity check */
 			die("null entry in heap");
 
 		/*
@@ -101,11 +106,12 @@ mapit()
 	if (Hashpart < Tabsize) {
 		int foundone = 0;
 
-		for ( ; Hashpart < Tabsize; Hashpart++) {
+		for (; Hashpart < Tabsize; Hashpart++) {
 			if (Table[Hashpart]->n_flag & ISPRIVATE)
 				continue;
 			if (foundone++ == 0)
-				fputs("You can't get there from here:\n", stderr);
+				fputs("You can't get there from here:\n",
+				    stderr);
 			putc('\t', stderr);
 			trprint(stderr, Table[Hashpart]);
 			putc('\n', stderr);
@@ -115,15 +121,16 @@ mapit()
 
 STATIC void
 heapchildren(n)
-	register node *n;
-{	register link *l;
+register node *n;
+{
+	register link *l;
 	register node *next;
 	register int mtrace;
 	register Cost cost;
 
 	for (l = n->n_link; l; l = l->l_next) {
 
-		next = l->l_to;		/* neighboring node */
+		next = l->l_to;	/* neighboring node */
 		mtrace = Tflag && maptrace(n, next);
 
 		if (l->l_flag & LTREE)
@@ -158,9 +165,9 @@ heapchildren(n)
 			mtracereport(n, l, "+\tadd");
 		}
 		next->n_parent = n;
-		if (dehash(next) == 0) {  /* first time */
+		if (dehash(next) == 0) {	/* first time */
 			next->n_cost = cost;
-			insert(l);	  /* insert at end */
+			insert(l);	/* insert at end */
 			heapup(l);
 		} else {
 			/* replace inferior path */
@@ -189,7 +196,7 @@ heapchildren(n)
  */
 STATIC int
 skipterminalalias(n, next)
-	node *n, *next;
+node *n, *next;
 {
 
 	while (n->n_flag & NALIAS) {
@@ -208,12 +215,13 @@ skipterminalalias(n, next)
  */
 STATIC int
 skiplink(l, parent, cost, trace)
-	link *l;		/* new link to this node */
-	node *parent;		/* (potential) new parent of this node */
-	register Cost cost;	/* new cost to this node */
-	int trace;		/* trace this link? */
-{	register node *n;	/* this node */
-	register link *lheap;		/* old link to this node */
+link *l;			/* new link to this node */
+node *parent;			/* (potential) new parent of this node */
+register Cost cost;		/* new cost to this node */
+int trace;			/* trace this link? */
+{
+	register node *n;	/* this node */
+	register link *lheap;	/* old link to this node */
 
 	n = l->l_to;
 
@@ -262,9 +270,10 @@ skiplink(l, parent, cost, trace)
 /* compute cost to next (l->l_to) via prev */
 STATIC Cost
 costof(prev, l)
-	register node *prev;
-	register link *l;
-{	register node *next;
+register node *prev;
+register link *l;
+{
+	register node *next;
 	register Cost cost;
 
 	if (l->l_flag & LALIAS)
@@ -279,22 +288,22 @@ costof(prev, l)
 	 * heuristics:
 	 *    charge for a dead link.
 	 *    charge for getting past a terminal host
-	 *    	or getting out of a dead host.
+	 *      or getting out of a dead host.
 	 *    charge for getting into a gatewayed net (except at a gateway).
 	 *    discourage mixing of syntax (when prev is a host).
 	 *
 	 * life was simpler when pathalias truly computed shortest paths.
 	 */
 	if (DEADLINK(l))
-		cost += INF;				/* dead link */
+		cost += INF;	/* dead link */
 	else if (DEADHOST(prev))
-		cost += INF;				/* dead parent */
+		cost += INF;	/* dead parent */
 	else if (GATEWAYED(next) && !(l->l_flag & LGATEWAY))
-		cost += INF;				/* not gateway */
+		cost += INF;	/* not gateway */
 	else if (!ISANET(prev)) {
 		if ((NETDIR(l) == LLEFT && (prev->n_flag & HASRIGHT))
-		 || (NETDIR(l) == LRIGHT && (prev->n_flag & HASLEFT)))
-			cost += INF;			/* mixed syntax */
+		    || (NETDIR(l) == LRIGHT && (prev->n_flag & HASLEFT)))
+			cost += INF;	/* mixed syntax */
 	}
 
 	return cost;
@@ -303,15 +312,16 @@ costof(prev, l)
 /* binary heap implementation of priority queue */
 STATIC void
 insert(l)
-	link *l;
-{	register node *n;
+link *l;
+{
+	register node *n;
 
 	n = l->l_to;
 	if (n->n_flag & MAPPED)
 		die("insert mapped node");
 
 	Heap[n->n_tloc] = 0;
-	if (Heap[Nheap+1] != 0)
+	if (Heap[Nheap + 1] != 0)
 		die("heap error in insert");
 	if (Nheap++ == 0) {
 		Heap[1] = l;
@@ -336,8 +346,9 @@ insert(l)
  */
 STATIC void
 heapup(l)
-	link *l;
-{	register long cindx, pindx;	/* child, parent indices */
+link *l;
+{
+	register long cindx, pindx;	/* child, parent indices */
 	register Cost cost;
 	register node *child, *parent;
 
@@ -366,9 +377,10 @@ heapup(l)
 }
 
 /* extract min (== Heap[1]) from heap */
-STATIC link	*
+STATIC link *
 min_node()
-{	link *rval, *lastlink;
+{
+	link *rval, *lastlink;
 	register link **rheap;
 
 	if (Nheap == 0)
@@ -399,19 +411,20 @@ min_node()
 
 STATIC void
 heapdown(l)
-	link *l;
-{	register long pindx, cindx;
+link *l;
+{
+	register long pindx, cindx;
 	register link **rheap = Heap;	/* in register -- heavily used */
 	node *child, *rchild, *parent;
 
 	pindx = l->l_to->n_tloc;
 	parent = rheap[pindx]->l_to;	/* invariant */
-	for ( ; (cindx = pindx * 2) <= Nheap; pindx = cindx) {
+	for (; (cindx = pindx * 2) <= Nheap; pindx = cindx) {
 		/* pick lhs or rhs child */
 		child = rheap[cindx]->l_to;
 		if (cindx < Nheap) {
 			/* compare with rhs child */
-			rchild = rheap[cindx+1]->l_to;
+			rchild = rheap[cindx + 1]->l_to;
 			/*
 			 * use rhs child if smaller than lhs child.
 			 * if equal, use rhs if net or domain.
@@ -432,8 +445,8 @@ heapdown(l)
 
 		/*
 		 * heuristics:
-		 *	move nets/domains up
-		 *	move nets above domains
+		 *      move nets/domains up
+		 *      move nets above domains
 		 */
 		if (parent->n_cost == child->n_cost) {
 			if (!ISANET(child))
@@ -449,10 +462,11 @@ heapdown(l)
 /* exchange Heap[i] and Heap[j] pointers */
 STATIC void
 heapswap(i, j)
-	long i, j;
-{	register link *temp, **rheap;
+long i, j;
+{
+	register link *temp, **rheap;
 
-	rheap = Heap;	/* heavily used -- put in register */
+	rheap = Heap;		/* heavily used -- put in register */
 	temp = rheap[i];
 	rheap[i] = rheap[j];
 	rheap[j] = temp;
@@ -463,7 +477,7 @@ heapswap(i, j)
 /* return 1 if n is already de-hashed (n_tloc < Hashpart), 0 o.w. */
 STATIC int
 dehash(n)
-	register node *n;
+register node *n;
 {
 	if (n->n_tloc < Hashpart)
 		return 1;
@@ -489,7 +503,8 @@ dehash(n)
  */
 STATIC void
 backlinks()
-{	register link *l;
+{
+	register link *l;
 	register node *n, *child;
 	node *nomap;
 	long i;
@@ -505,7 +520,7 @@ backlinks()
 			continue;
 		}
 
-		/* TODO: simplify this */		
+		/* TODO: simplify this */
 		/* add back link from minimal cost child */
 		child = 0;
 		for (l = nomap->n_link; l; l = l->l_next) {
@@ -522,7 +537,7 @@ backlinks()
 			if (n->n_cost > child->n_cost)
 				continue;
 			if (n->n_cost == child->n_cost) {
-				nomap->n_parent = child; /* for tiebreaker */
+				nomap->n_parent = child;	/* for tiebreaker */
 				if (tiebreaker(nomap, n))
 					continue;
 			}
@@ -530,14 +545,15 @@ backlinks()
 		}
 		if (child == 0)
 			continue;
-		(void) dehash(nomap);
+		(void)dehash(nomap);
 		l = addlink(child, nomap, INF, DEFNET, DEFDIR);	/* INF cost */
 		nomap->n_parent = child;
 		nomap->n_cost = costof(child, l);
 		insert(l);
 		heapup(l);
 		if (Vflag > 1)
-			fprintf(stderr, "backlink: %s <- %s\n", nomap->n_name, child->n_name);
+			fprintf(stderr, "backlink: %s <- %s\n",
+			    nomap->n_name, child->n_name);
 	}
 	vprintf(stderr, "%d backlinks\n", Nheap);
 }
@@ -545,8 +561,9 @@ backlinks()
 /* find a mapped copy of n if it exists */
 STATIC node *
 mappedcopy(n)
-	register node *n;
-{	register node *ncp;
+register node *n;
+{
+	register node *ncp;
 
 	if (n->n_flag & MAPPED)
 		return n;
@@ -562,13 +579,14 @@ mappedcopy(n)
  */
 STATIC void
 setheapbits(l)
-	register link *l;
-{	register node *n;
+register link *l;
+{
+	register node *n;
 	register node *parent;
 
 	n = l->l_to;
 	parent = n->n_parent;
-	n->n_flag &= ~(NALIAS|HASLEFT|HASRIGHT);	/* reset */
+	n->n_flag &= ~(NALIAS | HASLEFT | HASRIGHT);	/* reset */
 
 	/* record whether link is an alias */
 	if (l->l_flag & LALIAS) {
@@ -587,16 +605,18 @@ setheapbits(l)
 
 STATIC void
 mtracereport(from, l, excuse)
-	node *from;
-	link *l;
-	char *excuse;
-{	node *to = l->l_to;
+node *from;
+link *l;
+char *excuse;
+{
+	node *to = l->l_to;
 
 	fprintf(stderr, "%-16s ", excuse);
 	trprint(stderr, from);
 	fputs(" -> ", stderr);
 	trprint(stderr, to);
-	fprintf(stderr, " (%ld, %ld, %ld) ", from->n_cost, l->l_cost, to->n_cost);
+	fprintf(stderr, " (%ld, %ld, %ld) ", from->n_cost, l->l_cost,
+	    to->n_cost);
 	if (to->n_parent) {
 		trprint(stderr, to->n_parent);
 		fprintf(stderr, " (%ld)", to->n_parent->n_cost);
@@ -606,7 +626,7 @@ mtracereport(from, l, excuse)
 
 STATIC void
 otracereport(n)
-	node *n;
+node *n;
 {
 	if (n->n_parent)
 		trprint(stderr, n->n_parent);
@@ -616,11 +636,12 @@ otracereport(n)
 	trprint(stderr, n);
 	fputs(" mapped\n", stderr);
 }
-	
+
 #if 0
 /* extremely time consuming, exhaustive check of heap sanity. */
 chkheap(i)
-{	int lhs, rhs;
+{
+	int lhs, rhs;
 
 	lhs = i * 2;
 	rhs = lhs + 1;
@@ -641,9 +662,10 @@ chkheap(i)
 		link *l;
 
 		vprintf(stderr, "%5d %-16s", i, Heap[i]->l_to->n_name);
-		if ((l = Heap[i]->l_to->n_link) != 0) do {
-			vprintf(stderr, "%-16s", l->l_to->n_name);
-		} while ((l = l->l_next) != 0);
+		if ((l = Heap[i]->l_to->n_link) != 0)
+			do {
+				vprintf(stderr, "%-16s", l->l_to->n_name);
+			} while ((l = l->l_next) != 0);
 		vprintf(stderr, "\n");
 	}
 	for (i = Hashpart; i < Tabsize; i++) {
@@ -651,21 +673,23 @@ chkheap(i)
 		node *n;
 
 		vprintf(stderr, "%5d %-16s", i, Table[i]->n_name);
-		if ((l = Table[i]->n_link) != 0) do {
-			vprintf(stderr, "%-16s", l->l_to->n_name);
-		} while ((l = l->l_next) != 0);
+		if ((l = Table[i]->n_link) != 0)
+			do {
+				vprintf(stderr, "%-16s", l->l_to->n_name);
+			} while ((l = l->l_next) != 0);
 		vprintf(stderr, "\n");
 	}
-#endif /*00*/
-		
+#endif				/*00 */
+
 }
-#endif /*0*/
+#endif				/*0 */
 
 /* this isn't much use */
 #if 0
 STATIC int
 chkgap()
-{	static int gap = -1;
+{
+	static int gap = -1;
 	int newgap;
 
 	newgap = Hashpart - Nheap;
@@ -673,4 +697,4 @@ chkgap()
 		gap = newgap;
 	return gap;
 }
-#endif /*0*/
+#endif				/*0 */

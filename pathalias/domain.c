@@ -1,7 +1,7 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)domain.c	9.5 92/08/25";
-#endif /* lint */
+static char *sccsid = "@(#)domain.c	9.5 92/08/25";
+#endif				/* lint */
 
 #include "def.h"
 
@@ -19,7 +19,7 @@ static dom *good, *bad;
  * good and bad are passed by reference for move-to-front
  */
 isadomain(domain)
-	char *domain;
+char *domain;
 {
 
 	if (ondomlist(&good, domain)) {
@@ -44,9 +44,10 @@ isadomain(domain)
 }
 
 ondomlist(headp, domain)
-	dom **headp;
-	char *domain;
-{	dom *d, *head = *headp;
+dom **headp;
+char *domain;
+{
+	dom *d, *head = *headp;
 
 	for (d = head; d != 0; d = d->next) {
 		if (strcmp(d->name, domain) == 0) {
@@ -59,11 +60,12 @@ ondomlist(headp, domain)
 }
 
 
-			
+
 adddom(headp, domain)
-	dom **headp;
-	char *domain;
-{	dom *d, *head = *headp;
+dom **headp;
+char *domain;
+{
+	dom *d, *head = *headp;
 
 	d = newdom();
 	d->next = head;
@@ -74,8 +76,9 @@ adddom(headp, domain)
 }
 
 movetofront(headp, d)
-	dom **headp, *d;
-{	dom *head = *headp;
+dom **headp, *d;
+{
+	dom *head = *headp;
 
 	if (d->prev)
 		d->prev->next = d->next;
@@ -92,20 +95,23 @@ movetofront(headp, d)
 #include <arpa/nameser.h>
 
 nslookup(domain)
-	char *domain;
-{	register HEADER *hp;
+char *domain;
+{
+	register HEADER *hp;
 	register int n;
 	char q[PACKETSZ], a[PACKETSZ];	/* query, answer */
-	char buf[PACKETSZ+1];
+	char buf[PACKETSZ + 1];
 
 	if ((n = strlen(domain)) >= PACKETSZ)
 		return 0;
 	strcpy(buf, domain);
-	if (buf[n-1] != '.') {
+	if (buf[n - 1] != '.') {
 		buf[n++] = '.';
 		buf[n] = 0;
 	}
-	if ((n = res_mkquery(QUERY, buf, C_IN, T_ANY, (char *) 0, 0, (struct rrec *) 0, q, sizeof(q))) < 0)
+	if ((n =
+	    res_mkquery(QUERY, buf, C_IN, T_ANY, (char *)0, 0,
+	    (struct rrec *)0, q, sizeof(q))) < 0)
 		die("impossible res_mkquery error");
 	errno = 0;
 	if ((n = res_send(q, n, a, sizeof(a))) < 0)
@@ -115,12 +121,11 @@ nslookup(domain)
 		return 1;
 	return 0;
 }
-#else /*!RESOLVER*/
+#else				/*!RESOLVER */
 /*ARGSUSED*/
 nslookup(domain)
-	char *domain;
+char *domain;
 {
-	return 0;	/* i guess !?! */
+	return 0;		/* i guess !?! */
 }
 #endif /*RESOLVER*/
-

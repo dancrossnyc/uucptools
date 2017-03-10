@@ -1,6 +1,6 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)addnode.c	9.7 91/05/23";
+static char *sccsid = "@(#)addnode.c	9.7 91/05/23";
 #endif
 
 #include "def.h"
@@ -10,8 +10,8 @@ static char	*sccsid = "@(#)addnode.c	9.7 91/05/23";
 /* exports */
 node *addnode(), *addprivate();
 void alias(), hashanalyze(), fixprivate();
-node **Table;				/* hash table ^ priority queue */
-long Tabsize;				/* size of Table */	
+node **Table;			/* hash table ^ priority queue */
+long Tabsize;			/* size of Table */
 
 /* imports */
 extern link *addlink();
@@ -29,7 +29,7 @@ STATIC void crcinit(), rehash(), lowercase();
 STATIC long fold();
 STATIC long hash();
 STATIC node *isprivate();
-static node *Private;	/* list of private nodes in current input file */
+static node *Private;		/* list of private nodes in current input file */
 /*
  * these numbers are chosen because:
  *	-> they are prime,
@@ -45,13 +45,14 @@ static long Primes[] = {
 	1021, 2039, 3067, 5113, 8179, 13309, 21499, 34807, 56311, 0
 };
 
-static int	Tabindex;
-static long	Tab128;		/* Tabsize * 128 */
+static int Tabindex;
+static long Tab128;		/* Tabsize * 128 */
 
-node	*
+node *
 addnode(name)
-	register char *name;
-{	register long i;
+register char *name;
+{
+	register long i;
 	register node *n;
 	char *dot;
 
@@ -64,29 +65,30 @@ addnode(name)
 		return n;
 
 	i = hash(name, 0);
-	if (Table[i]) 
+	if (Table[i])
 		return Table[i];
 
 	n = newnode();
 	n->n_name = strsave(name);
 	Table[i] = n;
-	n->n_tloc = i;	/* essentially a back link to the table */
+	n->n_tloc = i;		/* essentially a back link to the table */
 
 	if (InetFlag && Home != 0
-	 && (dot = rindex(name, '.')) != 0 && isadomain(dot+1))
-		addlink(Home, n, 100+strlen(name), DEFNET, DEFDIR);
+	    && (dot = rindex(name, '.')) != 0 && isadomain(dot + 1))
+		addlink(Home, n, 100 + strlen(name), DEFNET, DEFDIR);
 
 	return n;
 }
 
 void
 alias(n1, n2)
-	node *n1, *n2;
+node *n1, *n2;
 {
-	link	*l;
+	link *l;
 
 	if (ISADOMAIN(n1) && ISADOMAIN(n2)) {
-		fprintf(stderr, "%s: domain alias %s = %s is illegal\n", Argv[0], n1->n_name, n2->n_name);
+		fprintf(stderr, "%s: domain alias %s = %s is illegal\n",
+		    Argv[0], n1->n_name, n2->n_name);
 		return;
 	}
 	l = addlink(n1, n2, (Cost) 0, DEFNET, DEFDIR);
@@ -120,18 +122,19 @@ alias(n1, n2)
 
 #define POLY32 0xf5000000	/* 32-bit polynomial */
 #define POLY31 0x48000000	/* 31-bit polynomial */
-#define POLY POLY31	/* use 31-bit to avoid sign problems */
+#define POLY POLY31		/* use 31-bit to avoid sign problems */
 
 static long CrcTable[128];
 
 STATIC void
 crcinit()
-{	register int i,j;
+{
+	register int i, j;
 	register long sum;
 
 	for (i = 0; i < 128; i++) {
 		sum = 0;
-		for (j = 7-1; j >= 0; --j)
+		for (j = 7 - 1; j >= 0; --j)
 			if (i & (1 << j))
 				sum ^= POLY >> j;
 		CrcTable[i] = sum;
@@ -140,8 +143,9 @@ crcinit()
 
 STATIC long
 fold(s)
-	register char *s;
-{	register long sum = 0;
+register char *s;
+{
+	register long sum = 0;
 	register int c;
 
 	while ((c = *s++) != 0)
@@ -160,24 +164,25 @@ fold(s)
  */
 #define HIGHWATER	79L
 #define isfull(n)	((n) * 128 >= Tab128)
-	
+
 STATIC long
 hash(name, unique)
-	char *name;
-	int unique;
-{	register long probe;
+char *name;
+int unique;
+{
+	register long probe;
 	register long hash2;
 	register node *n;
 
 	if (isfull(Ncount)) {
-		if (Tabsize == 0) {		/* first time */
+		if (Tabsize == 0) {	/* first time */
 			crcinit();
 			Tabindex = 0;
 			Tabsize = Primes[0];
 			Table = newtable(Tabsize);
-			Tab128 = (HIGHWATER * Tabsize * 128L)/100L;
+			Tab128 = (HIGHWATER * Tabsize * 128L) / 100L;
 		} else
-			rehash();		/* more, more! */
+			rehash();	/* more, more! */
 	}
 
 	probe = fold(name);
@@ -197,16 +202,17 @@ hash(name, unique)
 		if (EQ(n, name) && !(n->n_flag & ISPRIVATE) && !unique)
 			return probe;	/* this is it! */
 
-		probe -= hash2;		/* double hashing */
+		probe -= hash2;	/* double hashing */
 		if (probe < 0)
 			probe += Tabsize;
 	}
-	return probe;					/* brand new */
+	return probe;		/* brand new */
 }
 
 STATIC void
 rehash()
-{	register node **otable, **optr;
+{
+	register node **otable, **optr;
 	register long probe;
 	long osize;
 
@@ -221,13 +227,13 @@ rehash()
 		die("too many hosts");	/* need more prime numbers */
 	vprintf(stderr, "rehash into %d\n", Tabsize);
 	Table = newtable(Tabsize);
-	Tab128 = (HIGHWATER * Tabsize * 128L)/100L;
+	Tab128 = (HIGHWATER * Tabsize * 128L) / 100L;
 
 	do {
 		if (*optr == 0)
 			continue;	/* empty slot in old table */
 		probe = hash((*optr)->n_name,
-			((*optr)->n_flag & ISPRIVATE) != 0);
+		    ((*optr)->n_flag & ISPRIVATE) != 0);
 		if (Table[probe] != 0)
 			die("rehash error");
 		Table[probe] = *optr;
@@ -239,15 +245,16 @@ rehash()
 void
 hashanalyze()
 #if 0
-{ 	long	probe, hash2;
-	int	count, i, collision[8];
-	int	longest = 0, total = 0, slots = 0, longprobe = 0;
-	int	nslots = sizeof(collision)/sizeof(collision[0]);
+{
+	long probe, hash2;
+	int count, i, collision[8];
+	int longest = 0, total = 0, slots = 0, longprobe = 0;
+	int nslots = sizeof(collision) / sizeof(collision[0]);
 
 	if (!Vflag)
 		return;
 
-	strclear((char *) collision, sizeof(collision));
+	strclear((char *)collision, sizeof(collision));
 	for (i = 0; i < Tabsize; i++) {
 		if (Table[i] == 0)
 			continue;
@@ -261,7 +268,8 @@ hashanalyze()
 		probe = HASH1(probe);
 		/* thank you! */
 		while (Table[probe] != 0
-		    && strcmp(Table[probe]->n_name, Table[i]->n_name) != 0) {
+		    && strcmp(Table[probe]->n_name,
+		    Table[i]->n_name) != 0) {
 			count++;
 			probe -= hash2;
 			if (probe < 0)
@@ -269,7 +277,7 @@ hashanalyze()
 		}
 		if (Table[probe] == 0)
 			die("impossible hash error");
-		
+
 		total += count;
 		slots++;
 		if (count > longest) {
@@ -283,27 +291,29 @@ hashanalyze()
 	for (i = 1; i < nslots; i++)
 		if (collision[i])
 			fprintf(stderr, "%d chains: %d (%ld%%)\n",
-				i, collision[i], (collision[i] * 100L)/ slots);
-		if (collision[0])
-			fprintf(stderr, "> %d chains: %d (%ld%%)\n",
-				nslots - 1, collision[0],
-				(collision[0] * 100L)/ slots);
+			    i, collision[i],
+			    (collision[i] * 100L) / slots);
+	if (collision[0])
+		fprintf(stderr, "> %d chains: %d (%ld%%)\n",
+		    nslots - 1, collision[0],
+		    (collision[0] * 100L) / slots);
 	fprintf(stderr, "%2.2f probes per access, longest chain: %d, %s\n",
-		(double) total / slots, longest, Table[longprobe]->n_name);
+	    (double)total / slots, longest, Table[longprobe]->n_name);
 	if (Vflag < 2)
 		return;
 	probe = fold(Table[longprobe]->n_name);
 	hash2 = HASH2(probe);
 	probe = HASH1(probe);
 	while (Table[probe] != 0
-	    && strcmp(Table[probe]->n_name, Table[longprobe]->n_name) != 0) {
+	    && strcmp(Table[probe]->n_name,
+	    Table[longprobe]->n_name) != 0) {
 		fprintf(stderr, "%5d %s\n", probe, Table[probe]->n_name);
 		probe -= hash2;
 		if (probe < 0)
 			probe += Tabsize;
 	}
 	fprintf(stderr, "%5d %s\n", probe, Table[probe]->n_name);
-	
+
 }
 #else
 {
@@ -314,7 +324,7 @@ hashanalyze()
 /* convert to lower case in place */
 STATIC void
 lowercase(s)
-	register char *s;
+register char *s;
 {
 	do {
 		if (isupper(*s))
@@ -327,8 +337,9 @@ lowercase(s)
  */
 STATIC node *
 isprivate(name)
-	register char *name;
-{	register node *n;
+register char *name;
+{
+	register node *n;
 
 	for (n = Private; n != 0; n = n->n_private)
 		if (strcmp(name, n->n_name) == 0)
@@ -339,8 +350,9 @@ isprivate(name)
 /*  Add a private node so private that nobody can find it.  */
 node *
 addhidden(name)
-	register char *name;
-{	register node *n;
+register char *name;
+{
+	register node *n;
 	register int i;
 	if (Iflag)
 		lowercase(name);
@@ -359,15 +371,16 @@ addhidden(name)
 
 void
 fixprivate()
-{	register node *n, *next;
+{
+	register node *n, *next;
 	register long i;
 
 	for (n = Private; n != 0; n = next) {
-		n->n_flag |= ISPRIVATE;		/* overkill, but safe */
+		n->n_flag |= ISPRIVATE;	/* overkill, but safe */
 		i = hash(n->n_name, 1);
 		if (Table[i] != 0)
 			die("impossible private node error");
-	
+
 		Table[i] = n;
 		n->n_tloc = i;	/* essentially a back link to the table */
 		next = n->n_private;
@@ -378,8 +391,9 @@ fixprivate()
 
 node *
 addprivate(name)
-	register char *name;
-{	register node *n;
+register char *name;
+{
+	register node *n;
 
 	if (Iflag)
 		lowercase(name);

@@ -1,7 +1,7 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)addlink.c	9.7 88/06/10";
-#endif /* lint */
+static char *sccsid = "@(#)addlink.c	9.7 88/06/10";
+#endif				/* lint */
 
 #include "def.h"
 
@@ -21,19 +21,20 @@ extern int strcmp(), strlen();
 
 /* privates */
 STATIC void netbits(), ltrace(), ltrprint();
-static link	*Trace[NTRACE];
-static int	Tracecount;
+static link *Trace[NTRACE];
+static int Tracecount;
 
 #define EQ(n1, n2)	(strcmp((n1)->n_name, (n2)->n_name) == 0)
 #define LTRACE		if (Tflag) ltrace
 
 link *
 addlink(from, to, cost, netchar, netdir)
-	node *from;
-	register node *to;
-	Cost cost;
-	char netchar, netdir;
-{	register link *l, *prev = 0;
+node *from;
+register node *to;
+Cost cost;
+char netchar, netdir;
+{
+	register link *l, *prev = 0;
 
 	LTRACE(from, to, cost, netchar, netdir, "");
 	/*
@@ -52,7 +53,7 @@ addlink(from, to, cost, netchar, netdir)
 		}
 		prev = l;
 	}
-	
+
 
 	/* allocate and link in the new link struct */
 	l = newlink();
@@ -72,7 +73,8 @@ addlink(from, to, cost, netchar, netdir)
 		char buf[100];
 
 		l->l_flag |= LDEAD;
-		sprintf(buf, "link to %s ignored with negative cost", to->n_name);
+		sprintf(buf, "link to %s ignored with negative cost",
+		    to->n_name);
 		yyerror(buf);
 	}
 	if (netchar == 0) {
@@ -87,13 +89,14 @@ addlink(from, to, cost, netchar, netdir)
 }
 
 void
-deadlink(nleft, nright) 
-	node *nleft, *nright;
-{	link *l, *lhold = 0, *lprev, *lnext;
+deadlink(nleft, nright)
+node *nleft, *nright;
+{
+	link *l, *lhold = 0, *lprev, *lnext;
 
 	/* DEAD host */
 	if (nright == 0) {
-		nleft->n_flag |= NDEAD;		/* DEAD host */
+		nleft->n_flag |= NDEAD;	/* DEAD host */
 		return;
 	}
 
@@ -102,38 +105,41 @@ deadlink(nleft, nright)
 	/* grab <nleft, nright> instances at head of nleft adjacency list */
 	while ((l = nleft->n_link) != 0 && l->l_to == nright) {
 		nleft->n_link = l->l_next;	/* disconnect */
-		l->l_next = lhold;		/* terminate */
-		lhold = l;			/* add to lhold */
+		l->l_next = lhold;	/* terminate */
+		lhold = l;	/* add to lhold */
 	}
 
 	/* move remaining <nleft, nright> instances */
-	for (lprev = nleft->n_link; lprev && lprev->l_next; lprev = lprev->l_next) {
+	for (lprev = nleft->n_link; lprev && lprev->l_next;
+	    lprev = lprev->l_next) {
 		if (lprev->l_next->l_to == nright) {
 			l = lprev->l_next;
 			lprev->l_next = l->l_next;	/* disconnect */
-			l->l_next = lhold;		/* terminate */
+			l->l_next = lhold;	/* terminate */
 			lhold = l;
 		}
 	}
 
 	/* check for emptiness */
 	if (lhold == 0) {
-		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->l_flag |= LDEAD;
+		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->l_flag |=
+		    LDEAD;
 		return;
 	}
 
 	/* reinsert deleted edges as DEAD links */
 	for (l = lhold; l; l = lnext) {
 		lnext = l->l_next;
-		addlink(nleft, nright, l->l_cost, NETCHAR(l), NETDIR(l))->l_flag |= LDEAD;
+		addlink(nleft, nright, l->l_cost, NETCHAR(l),
+		    NETDIR(l))->l_flag |= LDEAD;
 		freelink(l);
 	}
 }
 
 STATIC void
 netbits(l, netchar, netdir)
-	register link *l;
-	char netchar, netdir;
+register link *l;
+char netchar, netdir;
 {
 	l->l_flag &= ~LDIR;
 	l->l_flag |= netdir;
@@ -141,9 +147,10 @@ netbits(l, netchar, netdir)
 }
 
 int
-tracelink(arg) 
-	char *arg;
-{	char *bang;
+tracelink(arg)
+char *arg;
+{
+	char *bang;
 	link *l;
 
 	if (Tracecount >= NTRACE)
@@ -152,8 +159,8 @@ tracelink(arg)
 	bang = index(arg, '!');
 	if (bang) {
 		*bang = 0;
-		l->l_to = addnode(bang+1);
-	} else 
+		l->l_to = addnode(bang + 1);
+	} else
 		l->l_to = 0;
 
 	l->l_from = addnode(arg);
@@ -168,10 +175,11 @@ tracelink(arg)
 
 STATIC void
 ltrace(from, to, cost, netchar, netdir, message)
-	node *from, *to;
-	Cost cost;
-	char netchar, netdir, *message;
-{	link *l;
+node *from, *to;
+Cost cost;
+char netchar, netdir, *message;
+{
+	link *l;
 	int i;
 
 	for (i = 0; i < Tracecount; i++) {
@@ -192,19 +200,20 @@ ltrace(from, to, cost, netchar, netdir, message)
 /* print a trace item */
 STATIC void
 ltrprint(from, to, cost, netchar, netdir, message)
-	node *from, *to;
-	Cost cost;
-	char netchar, netdir, *message;
-{	char buf[256], *bptr = buf;
+node *from, *to;
+Cost cost;
+char netchar, netdir, *message;
+{
+	char buf[256], *bptr = buf;
 
 	strcpy(bptr, from->n_name);
 	bptr += strlen(bptr);
 	*bptr++ = ' ';
-	if (netdir == LRIGHT)			/* @% */
+	if (netdir == LRIGHT)	/* @% */
 		*bptr++ = netchar;
 	strcpy(bptr, to->n_name);
 	bptr += strlen(bptr);
-	if (netdir == LLEFT)			/* !: */
+	if (netdir == LLEFT)	/* !: */
 		*bptr++ = netchar;
 	sprintf(bptr, "(%ld) %s", cost, message);
 	yyerror(buf);
@@ -212,14 +221,17 @@ ltrprint(from, to, cost, netchar, netdir, message)
 
 void
 atrace(n1, n2)
-	node *n1, *n2;
-{	link *l;
+node *n1, *n2;
+{
+	link *l;
 	int i;
 	char buf[256];
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
-		if (l->l_to == 0 && ((node *) l->l_from == n1 || (node *) l->l_from == n2)) {
+		if (l->l_to == 0
+		    && ((node *) l->l_from == n1
+		    || (node *) l->l_from == n2)) {
 			sprintf(buf, "%s = %s", n1->n_name, n2->n_name);
 			yyerror(buf);
 			return;
@@ -229,8 +241,9 @@ atrace(n1, n2)
 
 int
 maptrace(from, to)
-	register node *from, *to;
-{	register link *l;
+register node *from, *to;
+{
+	register link *l;
 	register int i;
 
 	for (i = 0; i < Tracecount; i++) {
@@ -239,23 +252,25 @@ maptrace(from, to)
 			if (EQ(from, l->l_from) || EQ(to, l->l_from))
 				return 1;
 		} else if (EQ(from, l->l_from) && EQ(to, l->l_to))
-				return 1;
+			return 1;
 	}
 	return 0;
 }
 
 void
 deletelink(from, to)
-	node *from;
-	node *to;
-{	register link *l, *lnext;
+node *from;
+node *to;
+{
+	register link *l, *lnext;
 
 	l = from->n_link;
 
 	/* delete all neighbors of from */
 	if (to == 0) {
 		while (l) {
-			LTRACE(from, l->l_to, l->l_cost, NETCHAR(l), NETDIR(l), "DELETED");
+			LTRACE(from, l->l_to, l->l_cost, NETCHAR(l),
+			    NETDIR(l), "DELETED");
 			lnext = l->l_next;
 			freelink(l);
 			l = lnext;
@@ -266,7 +281,8 @@ deletelink(from, to)
 
 	/* delete from head of list */
 	while (l && EQ(to, l->l_to)) {
-		LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l), "DELETED");
+		LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l),
+		    "DELETED");
 		lnext = l->l_next;
 		freelink(l);
 		l = from->n_link = lnext;
@@ -277,7 +293,8 @@ deletelink(from, to)
 		return;
 	for (lnext = l->l_next; lnext; lnext = l->l_next) {
 		if (EQ(to, lnext->l_to)) {
-			LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l), "DELETED");
+			LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l),
+			    "DELETED");
 			l->l_next = lnext->l_next;
 			freelink(lnext);
 			/* continue processing this link */

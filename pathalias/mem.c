@@ -1,6 +1,6 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)mem.c	9.6 92/08/25";
+static char *sccsid = "@(#)mem.c	9.6 92/08/25";
 #endif
 
 #include "def.h"
@@ -24,15 +24,16 @@ STATIC void nomem();
 static link *Lcache;
 static unsigned int Memwaste;
 
-link	*
+link *
 newlink()
-{	register link *rval;
+{
+	register link *rval;
 
 	if (Lcache) {
-	 	rval = Lcache;
+		rval = Lcache;
 		Lcache = Lcache->l_next;
-		strclear((char *) rval, sizeof(link));
-	} else if ((rval = (link * ) calloc(1, sizeof(link))) == 0)
+		strclear((char *)rval, sizeof(link));
+	} else if ((rval = (link *) calloc(1, sizeof(link))) == 0)
 		nomem();
 	return rval;
 }
@@ -40,17 +41,18 @@ newlink()
 /* caution: this destroys the contents of l_next */
 void
 freelink(l)
-	link *l;
+link *l;
 {
 	l->l_next = Lcache;
 	Lcache = l;
 }
 
-node	*
+node *
 newnode()
-{	register node *rval;
+{
+	register node *rval;
 
-	if ((rval = (node * ) calloc(1, sizeof(node))) == 0)
+	if ((rval = (node *) calloc(1, sizeof(node))) == 0)
 		nomem();
 	Ncount++;
 	return rval;
@@ -58,58 +60,63 @@ newnode()
 
 dom *
 newdom()
-{       register dom *rval;
+{
+	register dom *rval;
 
-	if ((rval = (dom * ) calloc(1, sizeof(dom))) == 0)
+	if ((rval = (dom *) calloc(1, sizeof(dom))) == 0)
 		nomem();
 
 	return rval;
 }
 
 
-char	*
+char *
 strsave(s)
-	char *s;
-{	register char *r;
+char *s;
+{
+	register char *r;
 
-	if ((r = malloc((unsigned) strlen(s) + 1)) == 0)
+	if ((r = malloc((unsigned)strlen(s) + 1)) == 0)
 		nomem();
-	(void) strcpy(r, s);
+	(void)strcpy(r, s);
 	return r;
 }
 
 #ifndef strclear
 void
 strclear(str, len)
-	register char *str;
-	register long len;
+register char *str;
+register long len;
 {
 	while (--len >= 0)
 		*str++ = 0;
 }
-#endif /*strclear*/
+#endif				/*strclear */
 
-node	**
+node **
 newtable(size)
-	long size;
-{	register node **rval;
+long size;
+{
+	register node **rval;
 
-	if ((rval = (node **) calloc(1, (unsigned int) size * sizeof(node *))) == 0) 
+	if ((rval =
+	    (node **) calloc(1,
+	    (unsigned int)size * sizeof(node *))) == 0)
 		nomem();
 	return rval;
 }
 
 void
 freetable(t, size)
-	node **t;
-	long size;
+node **t;
+long size;
 {
 #ifdef MYMALLOC
 	STATIC void addtoheap();
 
-	addtoheap((char *) t, size * sizeof(node *));
+	addtoheap((char *)t, size * sizeof(node *));
 #else
-	free((char *) t);
+	free((char *)t);
 #endif
 }
 
@@ -134,12 +141,12 @@ allocation()
 	static char *dataspace;
 	long rval;
 
-	if (dataspace == 0) {		/* first time */
+	if (dataspace == 0) {	/* first time */
 		dataspace = sbrk(0);
 		return 0;
 	}
-	rval = (sbrk(0) - dataspace)/1024;
-	if (rval < 0)			/* funny architecture? */
+	rval = (sbrk(0) - dataspace) / 1024;
+	if (rval < 0)		/* funny architecture? */
 		rval = -rval;
 	return rval;
 #else
@@ -184,13 +191,14 @@ struct heap {
 	long h_size;
 };
 
-static heap *Mheap;	/* not to be confused with a priority queue */
+static heap *Mheap;		/* not to be confused with a priority queue */
 
 STATIC void
 addtoheap(p, size)
-	char *p;
-	long size;
-{	int adjustment;
+char *p;
+long size;
+{
+	int adjustment;
 	heap *pheap;
 
 	/* p is aligned, but it doesn't hurt to check */
@@ -215,27 +223,28 @@ addtoheap(p, size)
  * which are returned to the heap with addtoheap(). 
  */
 
-char	*
+char *
 mymalloc(n)
-	register unsigned int n;
-{	static unsigned int size; /* how much do we have on hand? */
-	static char *mstash;	  /* where is it? */
+register unsigned int n;
+{
+	static unsigned int size;	/* how much do we have on hand? */
+	static char *mstash;	/* where is it? */
 	register char *rval;
 
-	if (n >= 1024) {		/* for hash table */
+	if (n >= 1024) {	/* for hash table */
 		rval = malloc(n);	/* aligned */
 		if (rval)
 			strclear(rval, n);
 		return rval;
 	}
 
-	n += align((char *) n);	/* keep everything aligned */
+	n += align((char *)n);	/* keep everything aligned */
 
 	if (n > size) {
 		Memwaste += size;	/* toss the fragment */
 		/* look in the heap */
 		if (Mheap) {
-			mstash = (char *) Mheap;	/* aligned */
+			mstash = (char *)Mheap;	/* aligned */
 			size = Mheap->h_size;
 			Mheap = Mheap->h_next;
 		} else {
@@ -246,7 +255,7 @@ mymalloc(n)
 			}
 			size = MBUFSIZ;
 		}
-		strclear(mstash, size);		/* what if size > 2^16? */
+		strclear(mstash, size);	/* what if size > 2^16? */
 	}
 	rval = mstash;
 	mstash += n;
@@ -260,10 +269,11 @@ mymalloc(n)
  */
 STATIC int
 align(n)
-	char *n;
-{	register int abits;	/* misalignment bits in n */
+char *n;
+{
+	register int abits;	/* misalignment bits in n */
 
-	abits = (int) n & ~(0xff << ALIGN) & 0xff;
+	abits = (int)n & ~(0xff << ALIGN) & 0xff;
 	if (abits == 0)
 		return 0;
 	return (1 << ALIGN) - abits;

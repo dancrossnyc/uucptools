@@ -1,6 +1,6 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)printit.c	9.4 89/02/07";
+static char *sccsid = "@(#)printit.c	9.4 89/02/07";
 #endif
 
 #include "def.h"
@@ -21,7 +21,7 @@ extern void die();
 extern int strlen();
 
 /* privates */
-static link *Ancestor;	/* for -f option */
+static link *Ancestor;		/* for -f option */
 STATIC void preorder(), setpath(), printhost(), printdomain();
 STATIC char *hostpath();
 STATIC int printable();
@@ -31,14 +31,15 @@ STATIC int printable();
 
 void
 printit()
-{	link *l;
+{
+	link *l;
 	char pbuf[PATHSIZE];
 
 	/* print home */
 	if (Cflag)
-		printf("%ld\t", (long) Home->n_cost);
+		printf("%ld\t", (long)Home->n_cost);
 	printf("%s\t%%s\n", Home->n_name);
-	
+
 	strcpy(pbuf, "%s");
 	for (l = Home->n_link; l; l = l->l_next) {
 		if (l->l_flag & LTREE) {
@@ -57,9 +58,10 @@ printit()
  */
 STATIC void
 preorder(l, ppath)
-	register link *l;
-	char *ppath;
-{	register node *n;
+register link *l;
+char *ppath;
+{
+	register node *n;
 	node *ncp;		/* circular copy list */
 	Cost cost;
 	char npath[PATHSIZE];
@@ -103,8 +105,9 @@ preorder(l, ppath)
 
 STATIC int
 printable(n)
-	register node *n;
-{	node *ncp;
+register node *n;
+{
+	node *ncp;
 	link *l;
 
 	if (n->n_flag & PRINTED)
@@ -155,10 +158,11 @@ printable(n)
 }
 
 STATIC void
-setpath(l, ppath, npath) 
-	link *l;
-	register char *ppath, *npath;
-{	register node *next, *parent;
+setpath(l, ppath, npath)
+link *l;
+register char *ppath, *npath;
+{
+	register node *next, *parent;
 	char netchar;
 
 	next = l->l_to;
@@ -191,7 +195,7 @@ setpath(l, ppath, npath)
 		strcpy(npath, ppath);
 		return;
 	}
-		
+
 	if (netchar == '@')
 		if (next->n_flag & ATSIGN)
 			netchar = '%';	/* shazam?  shaman? */
@@ -199,9 +203,9 @@ setpath(l, ppath, npath)
 			next->n_flag |= ATSIGN;
 
 	/* remainder should be a sprintf -- foo on '%' as an operator */
-	for ( ; (*npath = *ppath) != 0; ppath++) {
+	for (; (*npath = *ppath) != 0; ppath++) {
 		if (*ppath == '%') {
-			switch(ppath[1]) {
+			switch (ppath[1]) {
 			case 's':
 				ppath++;
 				npath = hostpath(npath, l, netchar);
@@ -223,10 +227,11 @@ setpath(l, ppath, npath)
 
 STATIC char *
 hostpath(path, l, netchar)
-	register char *path;
-	register link *l;
-	char netchar;
-{	register node *prev;
+register char *path;
+register link *l;
+char netchar;
+{
+	register node *prev;
 
 	prev = l->l_to->n_parent;
 	if (NETDIR(l) == LLEFT) {
@@ -263,9 +268,9 @@ hostpath(path, l, netchar)
 
 STATIC void
 printhost(n, path, cost)
-	register node *n;
-	char *path;
-	Cost cost;
+register node *n;
+char *path;
+Cost cost;
 {
 	if (n->n_flag & PRINTED)
 		die("printhost called twice");
@@ -273,7 +278,7 @@ printhost(n, path, cost)
 	/* skip private hosts */
 	if ((n->n_flag & ISPRIVATE) == 0) {
 		if (Cflag)
-			printf("%ld\t", (long) cost);
+			printf("%ld\t", (long)cost);
 		fputs(n->n_name, stdout);
 		putchar('\t');
 		puts(path);
@@ -282,10 +287,11 @@ printhost(n, path, cost)
 
 STATIC void
 printdomain(n, path, cost)
-	register node *n;
-	char *path;
-	Cost cost;
-{	node *p;
+register node *n;
+char *path;
+Cost cost;
+{
+	node *p;
 
 	if (n->n_flag & PRINTED)
 		die("printdomain called twice");
@@ -301,7 +307,9 @@ printdomain(n, path, cost)
 	if (!ISADOMAIN(n->n_parent)) {
 		/* top-level domain */
 		if (n->n_flag & ISPRIVATE) {
-			vprintf(stderr, "ignoring private top-level domain %s\n", n->n_name);
+			vprintf(stderr,
+			    "ignoring private top-level domain %s\n",
+			    n->n_name);
 			return;
 		}
 	} else {
@@ -315,7 +323,7 @@ printdomain(n, path, cost)
 
 	/* print it (at last!) */
 	if (Cflag)
-		printf("%ld\t", (long) cost);
+		printf("%ld\t", (long)cost);
 	do {
 		fputs(n->n_name, stdout);
 		n = n->n_parent;

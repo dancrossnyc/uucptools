@@ -1,7 +1,7 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 #ifndef lint
-static char	*sccsid = "@(#)mapaux.c	9.8 91/06/23";
-#endif /* lint */
+static char *sccsid = "@(#)mapaux.c	9.8 91/06/23";
+#endif				/* lint */
 
 #include "def.h"
 
@@ -24,7 +24,7 @@ extern int tiebreaker();
 extern node *ncopy();
 
 /* privates */
-static FILE *Gstream;	/* for dumping graph */
+static FILE *Gstream;		/* for dumping graph */
 STATIC void dumpnode(), untangle(), dfs();
 STATIC int height();
 STATIC link *lcopy();
@@ -35,12 +35,12 @@ STATIC link *lcopy();
  */
 long
 pack(low, high)
-	long low, high;
-{	long hole, next;
+long low, high;
+{
+	long hole, next;
 
 	/* find first "hole " */
-	for (hole = high; hole >= low && Table[hole] != 0; --hole)
-		;
+	for (hole = high; hole >= low && Table[hole] != 0; --hole);
 
 	/* repeatedly move next filled entry into last hole */
 	for (next = hole - 1; next >= low; --next) {
@@ -57,24 +57,29 @@ pack(low, high)
 
 void
 resetnodes()
-{	register long i;
+{
+	register long i;
 	register node *n;
 
 	for (i = Hashpart; i < Tabsize; i++)
 		if ((n = Table[i]) != 0) {
 			n->n_cost = (Cost) 0;
-			n->n_flag &= ~(NALIAS|ATSIGN|MAPPED|HASLEFT|HASRIGHT|NTERMINAL);
+			n->n_flag &=
+			    ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT
+			    | NTERMINAL);
 			n->n_copy = n;
 		}
-		
+
 	Home->n_cost = (Cost) 0;
-	Home->n_flag &= ~(NALIAS|ATSIGN|MAPPED|HASLEFT|HASRIGHT|NTERMINAL);
+	Home->n_flag &=
+	    ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT | NTERMINAL);
 	Home->n_copy = Home;
 }
 
-void	
+void
 dumpgraph()
-{	register long i;
+{
+	register long i;
 	register node *n;
 
 	if ((Gstream = fopen(Graphout, "w")) == NULL) {
@@ -83,7 +88,7 @@ dumpgraph()
 		return;
 	}
 
-	untangle();	/* untangle net cycles for proper output */
+	untangle();		/* untangle net cycles for proper output */
 
 	for (i = Hashpart; i < Tabsize; i++) {
 		n = Table[i];
@@ -101,12 +106,13 @@ dumpgraph()
 
 STATIC void
 dumpnode(from)
-	register node *from;
-{	register node *to;
+register node *from;
+{
+	register node *to;
 	register link *l;
 	link *lnet = 0, *ll, *lnext;
 
-	for (l = from->n_link ; l; l = l->l_next) {
+	for (l = from->n_link; l; l = l->l_next) {
 		to = l->l_to;
 		if (from == to)
 			continue;	/* oops -- it's me! */
@@ -128,7 +134,8 @@ dumpnode(from)
 			while (to->n_root && to != to->n_root)
 				to = to->n_root;
 			for (ll = lnet; ll; ll = ll->l_next)
-				if (strcmp(ll->l_to->n_name, to->n_name) == 0)
+				if (strcmp(ll->l_to->n_name, to->n_name) ==
+				    0)
 					break;
 			if (ll)
 				continue;	/* dup */
@@ -168,7 +175,8 @@ dumpnode(from)
  */
 STATIC void
 untangle()
-{	register long i;
+{
+	register long i;
 	register node *n;
 
 	for (i = Hashpart; i < Tabsize; i++) {
@@ -181,8 +189,9 @@ untangle()
 
 STATIC void
 dfs(n)
-	register node *n;
-{	register link *l;
+register node *n;
+{
+	register link *l;
 	register node *next;
 
 	n->n_flag |= INDFS;
@@ -202,11 +211,12 @@ dfs(n)
 }
 
 void
-showlinks() 
-{	register link *l;
+showlinks()
+{
+	register link *l;
 	register node *n;
 	register long i;
-	FILE	*estream;
+	FILE *estream;
 
 	if ((estream = fopen(Linkout, "w")) == 0)
 		return;
@@ -226,7 +236,7 @@ showlinks()
 			fprintf(estream, "(%d)\n", l->l_cost);
 		}
 	}
-	(void) fclose(estream);
+	(void)fclose(estream);
 }
 
 /*
@@ -238,9 +248,10 @@ showlinks()
 #define OLDP 1
 int
 tiebreaker(n, newp)
-	node *n;
-	register node *newp;
-{	register char *opname, *npname, *name;
+node *n;
+register node *newp;
+{
+	register char *opname, *npname, *name;
 	register node *oldp;
 	int metric;
 
@@ -299,8 +310,9 @@ tiebreaker(n, newp)
 
 STATIC int
 height(n)
-	register node *n;
-{	register int i = 0;
+register node *n;
+{
+	register int i = 0;
 
 	if (n == 0)
 		return 0;
@@ -309,7 +321,7 @@ height(n)
 			i++;
 	return i;
 }
-	
+
 /*
  * return a copy of n ( == l->l_to).  we rely on n and its copy
  * pointing to the same name string, which is kludgey, but works
@@ -322,13 +334,15 @@ height(n)
 		      && !((l)->l_flag & LALIAS))
 node *
 ncopy(parent, l)
-	register node *parent;
-	register link *l;
-{	register node *n, *ncp;
+register node *parent;
+register link *l;
+{
+	register node *n, *ncp;
 
 #ifdef DEBUG
 	if (Vflag > 1)
-		vprintf(stderr, "<%s> <- %s\n", l->l_to->n_name, parent->n_name);
+		vprintf(stderr, "<%s> <- %s\n", l->l_to->n_name,
+		    parent->n_name);
 #endif
 	n = l->l_to;
 	if (REUSABLE(n, l)) {
@@ -345,7 +359,10 @@ ncopy(parent, l)
 	ncp->n_copy = n->n_copy;	/* circular list */
 	n->n_copy = ncp;
 	ncp->n_link = lcopy(parent, n);
-	ncp->n_flag = (n->n_flag & ~(NALIAS|ATSIGN|MAPPED|HASLEFT|HASRIGHT)) | NTERMINAL;
+	ncp->n_flag =
+	    (n->
+	    n_flag & ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT)) |
+	    NTERMINAL;
 	return ncp;
 }
 
@@ -361,10 +378,11 @@ ncopy(parent, l)
  */
 STATIC link *
 lcopy(parent, n)
-	register node *parent, *n;
-{	register link *l, *lcp;
+register node *parent, *n;
+{
+	register link *l, *lcp;
 	link *first = 0, *last = 0;
- 
+
 	for (l = n->n_link; l != 0; l = l->l_next) {
 		/* skip if dest is already mapped */
 		if ((l->l_to->n_flag & MAPPED) != 0)
@@ -385,7 +403,7 @@ lcopy(parent, n)
 		lcp->l_flag &= ~LTREE;
 		if (ISANET(n))
 			lcp->l_flag |= LTERMINAL;
- 
+
 		if (first == 0) {
 			first = last = lcp;
 		} else {
