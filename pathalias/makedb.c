@@ -41,7 +41,7 @@ main(int argc, char *argv[])
 		}
 
 
-	if ((ofptr = rindex(Ofile, '/')) != 0)
+	if ((ofptr = strrchr(Ofile, '/')) != 0)
 		ofptr++;
 	else
 		ofptr = Ofile;
@@ -110,8 +110,8 @@ makedb(char *ifile)
 
 		end = line + strlen(line);
 		end[-1] = 0;	/* kill newline, stuff null terminator */
-		op = index(line, '\t');
-		if (op != 0) {
+		op = strchr(line, '\t');
+		if (op != NULL) {
 			*op++ = 0;
 			key.dsize = op - line;	/* 0 terminated */
 			val.dptr = op;

@@ -148,7 +148,7 @@ tracelink(char *arg)
 	if (Tracecount >= NTRACE)
 		return -1;
 	l = newlink();
-	bang = index(arg, '!');
+	bang = strchr(arg, '!');
 	if (bang) {
 		*bang = 0;
 		l->l_to = addnode(bang + 1);

@@ -73,7 +73,7 @@ addnode(char *name)
 	n->n_tloc = i;		/* essentially a back link to the table */
 
 	if (InetFlag && Home != 0
-	    && (dot = rindex(name, '.')) != 0 && isadomain(dot + 1))
+	    && (dot = strrchr(name, '.')) != 0 && isadomain(dot + 1))
 		addlink(Home, n, 100 + strlen(name), DEFNET, DEFDIR);
 
 	return n;

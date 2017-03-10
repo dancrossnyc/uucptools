@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 			Cflag++;
 			break;
 		case 'd':	/* dead host or link */
-			if ((bang = index(optarg, '!')) != 0) {
+			if ((bang = strchr(optarg, '!')) != 0) {
 				*bang++ = 0;
 				deadlink(addnode(optarg), addnode(bang));
 			} else

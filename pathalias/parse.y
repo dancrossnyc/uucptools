@@ -5,6 +5,7 @@ static char	*sccsid = "@(#)parse.y	9.11 91/06/01";
 #endif /* lint */
 
 #include "def.h"
+#include "fns.h"
 
 /* scanner states (yylex, parse) */
 #define OTHER		0
@@ -14,22 +15,20 @@ static char	*sccsid = "@(#)parse.y	9.11 91/06/01";
 
 /* exports */
 long Tcount;
-extern void yyerror();
+extern void yyerror(char *);
 
 /* imports */
-extern node *addnode(), *addprivate();
-extern void fixprivate(), alias(), deadlink(), deletelink();
-extern link *addlink();
-extern int strcmp();
-extern char *strsave();
 extern int optind;
 extern char *Cfile, *Netchars, **Argv;
 extern int Lineno, Argc;
 extern node *Home;
 
 /* privates */
-static void fixnet(), adjust();
-static int yylex(), yywrap(), getword();
+static void fixnet(node *network, node *nlist, Cost cost, char netchar, char netdir);
+static void adjust(node *n, Cost cost);
+static int yylex(void);
+static int yywrap(void);
+static int getword(char *str, int c);
 static int Scanstate = NEWLINE;	/* scanner (yylex) state */
 
 /* flags for ys_flags */
@@ -238,24 +237,11 @@ cexpr	: COST
 %%
 
 void
-#ifdef YYDEBUG
-/*VARARGS1*/
-yyerror(fmt, arg)
-	char *fmt, *arg;
-#else
-yyerror(s)
-	char *s;
-#endif
+yyerror(char *s)
 {
 	/* a concession to bsd error(1) */
 	fprintf(stderr, "\"%s\", ", Cfile);
-#ifdef YYDEBUG
-	fprintf(stderr, "line %d: ", Lineno);
-	fprintf(stderr, fmt, arg);
-	putc('\n', stderr);
-#else
 	fprintf(stderr, "line %d: %s\n", Lineno, s);
-#endif
 }
 
 /*
@@ -273,12 +259,9 @@ yyerror(s)
  * multiple declarations.  this is a feechur, albeit a useless one.
  */
 static void
-fixnet(network, nlist, cost, netchar, netdir)
-	node *network;
-	node *nlist;
-	Cost cost;
-	char netchar, netdir;
-{	node *member, *nextnet;
+fixnet(node *network, node *nlist, Cost cost, char netchar, char netdir)
+{
+	node *member, *nextnet;
 	link *l;
 	static int netanon = 0;
 	char anon[25];
@@ -339,7 +322,8 @@ static struct ctable {
 
 static int
 yylex()
-{	static char retbuf[128];	/* for return to yacc part */
+{
+	static char retbuf[128];	/* for return to yacc part */
 	int c;
 	char *buf = retbuf;
 	struct ctable *ct;
@@ -452,7 +436,7 @@ continuation:
 		return SITE;
 	}
 
-	if (index(Netchars, c)) {
+	if (strchr(Netchars, c) != NULL) {
 		yylval.y_net = c;
 		return NET;
 	}
@@ -465,9 +449,7 @@ continuation:
  * string that contains no newline.  return -1 on failure or EOF, 0 o.w.
  */ 
 static int
-getword(str, c)
-	char *str;
-	int c;
+getword(char *str, int c)
 {
 	if (c == QUOTE) {
 		while ((c = getchar()) != QUOTE) {
@@ -521,10 +503,9 @@ yywrap()
 }
 
 static void
-adjust(n, cost)
-	node *n;
-	Cost cost;
-{	link *l;
+adjust(node *n, Cost cost)
+{
+	link *l;
 
 	n->n_cost += cost;	/* cumulative */
 
