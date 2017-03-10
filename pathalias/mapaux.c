@@ -8,17 +8,14 @@
 #include "def.h"
 #include "fns.h"
 
-/* imports */
-extern long Nheap, Hashpart, Tabsize, NumNcopy, Nlink, NumLcopy;
-extern Node **Table, *Home;
-extern char *Graphout, *Linkout, *Netchars, **Argv;
-extern int Vflag;
-
 /* privates */
+static void dumpnode(Node *from);
+static void untangle(void);
+static void dfs(Node *n);
+static int height(Node *n);
+static Link *lcopy(Node *parent, Node *n);
+
 static FILE *Gstream;		/* for dumping graph */
-static void dumpnode(), untangle(), dfs();
-static int height();
-static Link *lcopy();
 
 /*
  * slide everything from Table[low] to Table[high]

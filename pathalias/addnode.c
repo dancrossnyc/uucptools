@@ -11,21 +11,18 @@
 
 #define EQ(n, s)	(*(n)->name == *(s) && strcmp((n)->name, (s)) == 0)
 
-/* exports */
+/* globals */
 Node **Table;			/* hash table ^ priority queue */
 long Tabsize;			/* size of Table */
 
-/* imports */
-extern int Iflag, Tflag, Vflag, InetFlag;
-extern Node **Table, *Home;
-extern long Ncount, Tabsize;
-extern char **Argv;
-
 /* privates */
-static void crcinit(), rehash(), lowercase();
-static long fold();
-static long hash();
-static Node *isprivate();
+static void crcinit(void);
+static void rehash(void);
+static void lowercase(char *s);
+static unsigned long fold(char *s);
+static unsigned long hash(char *name, int unique);
+static Node *isprivate(char *name);
+
 static Node *Private;		/* list of private nodes in current input file */
 /*
  * these numbers are chosen because:
@@ -48,7 +45,7 @@ static long Tab128;		/* Tabsize * 128 */
 Node *
 addnode(char *name)
 {
-	long i;
+	unsigned long i;
 	Node *n;
 	char *dot;
 
@@ -136,14 +133,15 @@ crcinit(void)
 	}
 }
 
-static long
+static unsigned long
 fold(char *s)
 {
-	long sum = 0;
+	unsigned long sum = 0;
 	int c;
 
 	while ((c = *s++) != 0)
 		sum = (sum >> 7) ^ CrcTable[(sum ^ c) & 0x7f];
+
 	return sum;
 }
 
@@ -159,11 +157,11 @@ fold(char *s)
 #define HIGHWATER	79L
 #define isfull(n)	((n) * 128 >= Tab128)
 
-static long
+static unsigned long
 hash(char *name, int unique)
 {
-	long probe;
-	long hash2;
+	unsigned long probe;
+	unsigned long hash2;
 	Node *n;
 
 	if (isfull(Ncount)) {
@@ -198,6 +196,7 @@ hash(char *name, int unique)
 		if (probe < 0)
 			probe += Tabsize;
 	}
+
 	return probe;		/* brand new */
 }
 

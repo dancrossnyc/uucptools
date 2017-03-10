@@ -11,7 +11,7 @@
 #include "def.h"
 #include "fns.h"
 
-/* exports */
+/* globals */
 char *Cfile;			/* current input file */
 char *Graphout;			/* file for dumping edges (-g option) */
 char *Linkout;			/* file for dumping shortest path tree */
@@ -27,11 +27,6 @@ int InetFlag;			/* local host is w/in scope of DNS (-I flag) */
 int Lineno = 1;			/* line number within current input file */
 int Argc;			/* external copy of argc (for input files) */
 
-/* imports */
-extern char *optarg;
-extern int optind;
-extern long Lcount, Ncount;
-
 #define USAGE "usage: %s [-vciDfI] [-l localname] [-d deadlink] [-t tracelink] [-g edgeout] [-s treeout] [-a avoid] [files ...]\n"
 
 int
@@ -46,7 +41,7 @@ main(int argc, char *argv[])
 	Argv = argv;
 	Argc = argc;
 
-	while ((c = getopt(argc, argv, "cd:Dfg:iIl:s:t:v")) != EOF)
+	while ((c = getopt(argc, argv, "cd:Dfg:iIl:s:t:v")) != -1)
 		switch (c) {
 		case 'c':	/* print cost info */
 			Cflag++;

@@ -3,13 +3,14 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include "config.h"
 
 typedef struct {
 	char *dptr;
 	int dsize;
-} datum;
+} Datum;
 
 char *Ofile = ALIASDB, *ProgName;
 
@@ -24,7 +25,7 @@ main(int argc, char *argv[])
 	extern char *optarg;
 
 	ProgName = argv[0];
-	while ((c = getopt(argc, argv, "o:a")) != EOF)
+	while ((c = getopt(argc, argv, "o:a")) != -1)
 		switch (c) {
 		case 'o':	/* dbm output file */
 			Ofile = optarg;
@@ -92,7 +93,7 @@ int
 makedb(char *ifile)
 {
 	char line[BUFSIZ];
-	datum key, val;
+	Datum key, val;
 
 	if (ifile && (freopen(ifile, "r", stdin) == NULL)) {
 		perror(ifile);

@@ -8,12 +8,9 @@
 #include "def.h"
 #include "fns.h"
 
-/* exports */
+/* globals */
 char *Netchars = "!:@%";	/* sparse, but sufficient */
 long Lcount;			/* how many edges? */
-
-/* imports */
-extern int Tflag, Dflag;
 
 /* privates */
 static void netbits(Link *l, int netchar, int netdir);

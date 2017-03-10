@@ -1,40 +1,38 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stdio.h>
 
 #include "def.h"
 #include "fns.h"
 
-#define chkheap(i)		/* void */
-#define chkgap()		/* int */
-
 #define trprint(stream, n) \
 	fprintf((stream), (n)->flag & NTERMINAL ? "<%s>" : "%s", (n)->name)
 
-/* exports */
+/* globals */
 /* invariant while mapping: Nheap < Hashpart */
 long Hashpart;			/* start of unreached nodes */
 long Nheap;			/* end of heap */
 long NumNcopy, Nlink, NumLcopy;
 
-/* imports */
-extern long Nheap, Hashpart, Tabsize, Tcount;
-extern int Tflag, Vflag;
-extern Node **Table, *Home;
-extern char *Linkout, *Graphout;
-
 /* privates */
 static long Heaphighwater;
 static Link **Heap;
 
-static void insert(), heapup(), heapdown(), heapswap(), backlinks();
-static void setheapbits(), mtracereport(), heapchildren(), otracereport();
-static Link *min_node();
-static int dehash(), skiplink(), skipterminalalias();
-static Cost costof();
-static Node *mappedcopy();
+static void insert(Link *l);
+static void heapup(Link *l);
+static void heapdown(Link *l);
+static void heapswap(long i, long j);
+static void heapchildren(Node *n);
+static void backlinks(void);
+static void setheapbits(Link *l);
+static void mtracereport(Node *from, Link *l, char *excuse);
+static void otracereport(Node *n);
+static Link *min_node(void);
+static int dehash(Node *n);
+static int skiplink(Link *l, Node *parent, Cost cost, int trace);
+static int skipterminalalias(Node *n, Node *next);
+static Cost costof(Node *prev, Link *l);
+static Node *mappedcopy(Node *n);
 
 /* transform the graph to a shortest-path tree by marking tree edges */
 void
@@ -73,8 +71,6 @@ mapit(void)
 				die("mapped node in heap");
 			if (Tflag && maptrace(n, n))
 				otracereport(n);	/* tracing */
-			chkheap(1);
-			chkgap();	/* debugging */
 			n->flag |= MAPPED;
 			heapchildren(n);	/* add children to heap */
 		}
@@ -175,7 +171,6 @@ heapchildren(Node *n)
 			}
 		}
 		setheapbits(l);
-		chkheap(1);
 
 	}
 }
@@ -396,7 +391,6 @@ min_node(void)
  * given the opportunity, attempt to place nets and domains
  * near the root.  this helps tiebreaker() shun domain routes.
  */
-
 static void
 heapdown(Link *l)
 {

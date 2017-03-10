@@ -8,15 +8,11 @@
 #include "def.h"
 #include "fns.h"
 
-/* exports */
+/* globals */
 long Ncount;
 
-/* imports */
-extern char *Netchars;
-extern int Vflag;
-
 /* privates */
-static void nomem();
+static void nomem(void);
 static Link *Lcache;
 
 Link *

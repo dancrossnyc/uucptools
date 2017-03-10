@@ -14,19 +14,15 @@
  * use lots of char bufs -- profiling indicates this costs about 5 kbytes
  */
 
-/* imports */
-extern int Cflag, Vflag, Dflag, Fflag;
-extern Node *Home;
-extern char *Netchars;
-
 /* privates */
-static Link *Ancestor;		/* for -f option */
 static void preorder(Link *l, char *ppath);
 static void setpath(Link *l, char *ppath, char *npath, size_t nlen);
 static void printhost(Node *n, char *path, Cost cost);
 static void printdomain(Node *n, char *path, Cost cost);
 static size_t hostpath(char *path, size_t len, Link *l, int netchar);
 static int printable(Node *n);
+
+static Link *Ancestor;		/* for -f option */
 
 /* in practice, even the longest paths are < 100 bytes */
 #define UUPATHSIZE 512

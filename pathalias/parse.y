@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "def.h"
 #include "fns.h"
@@ -17,13 +18,6 @@
 
 /* exports */
 long Tcount;
-extern void yyerror(char *);
-
-/* imports */
-extern int optind;
-extern char *Cfile, *Netchars, **Argv;
-extern int Lineno, Argc;
-extern Node *Home;
 
 /* privates */
 static void fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir);
