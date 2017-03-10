@@ -5,7 +5,7 @@
 ###
 # if you can't or don't intend to use dbm files,
 # don't bother with DBM or makedb
-DBM = -ldbm
+#DBM = -ldbm
 # or if you roll your own ...
 # DBM = dbm.o
 ###

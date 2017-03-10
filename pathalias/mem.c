@@ -3,6 +3,8 @@
 static char *sccsid = "@(#)mem.c	9.6 92/08/25";
 #endif
 
+#include <string.h>
+
 #include "def.h"
 
 /* exports */
@@ -14,10 +16,6 @@ extern long allocation();
 extern char *Netchars;
 extern int Vflag;
 extern void die();
-extern int strlen();
-#ifdef DEBUG
-extern char *sbrk();
-#endif
 
 /* privates */
 static void nomem();
@@ -95,13 +93,7 @@ newtable(long size)
 void
 freetable(node **t, long size)
 {
-#ifdef MYMALLOC
-	static void addtoheap();
-
-	addtoheap((char *)t, size * sizeof(node *));
-#else
 	free((char *)t);
-#endif
 }
 
 static void
@@ -121,21 +113,7 @@ nomem(void)
 long
 allocation(void)
 {
-#ifdef DEBUG
-	static char *dataspace;
-	long rval;
-
-	if (dataspace == 0) {	/* first time */
-		dataspace = sbrk(0);
-		return 0;
-	}
-	rval = (sbrk(0) - dataspace) / 1024;
-	if (rval < 0)		/* funny architecture? */
-		rval = -rval;
-	return rval;
-#else
 	return 0;
-#endif
 }
 
 /* how much memory has been wasted? */
@@ -146,117 +124,3 @@ wasted(void)
 		return;
 	vprintf(stderr, "memory allocator wasted %ld bytes\n", Memwaste);
 }
-
-#ifdef MYMALLOC
-
-/* use c library malloc/calloc here, and here only */
-#undef malloc
-#undef calloc
-
-/* imports */
-extern char *malloc(), *calloc();
-
-/* private */
-static int align();
-
-/* allocate in MBUFSIZ chunks.  4k works ok (less 16 for malloc quirks). */
-#define MBUFSIZ (4 * 1024 - 16)
-
-/*
- * mess with ALIGN at your peril.  longword (== 0 mod 4)
- * alignment seems to work everywhere.
- */
-
-#define ALIGN 2
-
-typedef struct heap heap;
-struct heap {
-	heap *h_next;
-	long h_size;
-};
-
-static heap *Mheap;		/* not to be confused with a priority queue */
-
-static void
-addtoheap(char *p, long size)
-{
-	int adjustment;
-	heap *pheap;
-
-	/* p is aligned, but it doesn't hurt to check */
-	adjustment = align(p);
-	p += adjustment;
-	size -= adjustment;
-
-	if (size < 1024)
-		return;		/* can't happen */
-	pheap = (heap *) p;	/* pheap is shorthand */
-	pheap->h_next = Mheap;
-	pheap->h_size = size;
-	Mheap = pheap;
-}
-
-/*
- * buffered malloc()
- *	returns space initialized to 0.  calloc isn't used, since
- *	strclear can be faster.
- *
- * free is ignored, except for very large objects,
- * which are returned to the heap with addtoheap().
- */
-
-char *
-mymalloc(unsigned int n)
-{
-	static unsigned int size;	/* how much do we have on hand? */
-	static char *mstash;	/* where is it? */
-	char *rval;
-
-	if (n >= 1024) {	/* for hash table */
-		rval = malloc(n);	/* aligned */
-		if (rval)
-			strclear(rval, n);
-		return rval;
-	}
-
-	n += align((char *)n);	/* keep everything aligned */
-
-	if (n > size) {
-		Memwaste += size;	/* toss the fragment */
-		/* look in the heap */
-		if (Mheap) {
-			mstash = (char *)Mheap;	/* aligned */
-			size = Mheap->h_size;
-			Mheap = Mheap->h_next;
-		} else {
-			mstash = malloc(MBUFSIZ);	/* aligned */
-			if (mstash == 0) {
-				size = 0;
-				return 0;
-			}
-			size = MBUFSIZ;
-		}
-		strclear(mstash, size);	/* what if size > 2^16? */
-	}
-	rval = mstash;
-	mstash += n;
-	size -= n;
-	return rval;
-}
-
-/*
- * what's the (mis-)alignment of n?  return the complement of
- * n mod 2^ALIGN
- */
-static int
-align(char *n)
-{
-	int abits;	/* misalignment bits in n */
-
-	abits = (int)n & ~(0xff << ALIGN) & 0xff;
-	if (abits == 0)
-		return 0;
-	return (1 << ALIGN) - abits;
-}
-
-#endif /*MYMALLOC*/
