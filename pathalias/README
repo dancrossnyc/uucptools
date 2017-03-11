@@ -5,7 +5,7 @@ To: whom it may concern
 Subject: release notes
 
 ---> compilation instructions
-edit config.h
+edit Makefile
 make
 
 if getopt is undefined, obtain a copy from a usenet sources archive site and
