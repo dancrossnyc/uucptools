@@ -90,17 +90,18 @@ int
 nslookup(char *domain)
 {
 	HEADER *hp;
-	size_t n;
+	size_t dlen;
+	int n;
 	unsigned char q[PACKETSZ], a[PACKETSZ];	// query, answer
 	char buf[PACKETSZ + 1];
 
-	n = strlen(domain);
-	if (n >= PACKETSZ)
+	dlen = strlen(domain);
+	if (dlen >= PACKETSZ)
 		return 0;
-	memmove(buf, domain, n);
-	if (buf[n - 1] != '.')
-		buf[n++] = '.';
-	buf[n] = '\0';
+	memmove(buf, domain, dlen);
+	if (buf[dlen - 1] != '.')
+		buf[dlen++] = '.';
+	buf[dlen] = '\0';
 	n = res_mkquery(QUERY, buf, C_IN, T_ANY, NULL, 0, NULL, q, sizeof q);
 	if (n < 0)
 		die("impossible res_mkquery error");
