@@ -255,7 +255,7 @@ hostpath(char *path, size_t len, Link *l, int netchar)
 			r += ll;
 			prev = prev->parent;
 		}
-		snprintf(tmp, sizeof tmp, "%s%%s", netchar == '%' ? "%" : "");
+		snprintf(tmp, sizeof tmp, "%c%s%%s", netchar, netchar == '%' ? "%" : "");
 		ll = strlen(tmp);
 		if (len <= ll)
 			die("hostpath: name too long");
@@ -263,7 +263,7 @@ hostpath(char *path, size_t len, Link *l, int netchar)
 		r += ll;
 	} else {
 		// %s@host
-		snprintf(tmp, sizeof tmp, "%%s%s", (netchar == '%') ? "%" : "");
+		snprintf(tmp, sizeof tmp, "%%s%c%s", netchar, (netchar == '%') ? "%" : "");
 		ll = strlen(tmp);
 		if (len <= ll)
 			die("hostpath: name too long");
