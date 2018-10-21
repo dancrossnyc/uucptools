@@ -210,7 +210,7 @@ rehash(void)
 	Tabsize = Primes[++Tabindex];
 	if (Tabsize == 0)
 		die("too many hosts");	// need more prime numbers
-	vprint(stderr, "rehash into %d\n", Tabsize);
+	Vprintf(stderr, "rehash into %d\n", Tabsize);
 	Table = newtable(Tabsize);
 	Tab128 = (HIGHWATER * Tabsize * 128UL) / 100UL;
 

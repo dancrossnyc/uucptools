@@ -114,7 +114,7 @@ main(int argc, char *argv[])
 
 	yyparse();		// read in link info
 
-	vprint(stderr, "%ld nodes, %ld links\n", Ncount, Lcount);
+	Vprintf(stderr, "%ld nodes, %ld links\n", Ncount, Lcount);
 
 	Cfile = "[backlinks]";	// for tracing back links
 	Lineno = 0;

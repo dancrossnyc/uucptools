@@ -330,7 +330,7 @@ printdomain(Node *n, char *path, Cost cost)
 	if (!ISADOMAIN(n->parent)) {
 		// top-level domain
 		if (n->flag & ISPRIVATE) {
-			vprint(stderr,
+			Vprintf(stderr,
 			    "ignoring private top-level domain %s\n",
 			    n->name);
 			return;

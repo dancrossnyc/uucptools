@@ -41,7 +41,7 @@ mapit(void)
 	Node *n;
 	Link *l;
 
-	vprint(stderr, "*** mapping\ttcount = %ld\n", Tcount);
+	Vprintf(stderr, "*** mapping\ttcount = %ld\n", Tcount);
 	Tflag = Tflag && Vflag;	// tracing here only if verbose
 	// re-use the hash table space for the heap
 	Heap = (Link **) Table;
@@ -74,7 +74,7 @@ mapit(void)
 			n->flag |= MAPPED;
 			heapchildren(n);	// add children to heap
 		}
-		vprint(stderr,
+		Vprintf(stderr,
 		    "heap hiwat %ld\nncopy = %ld, nlink = %ld, lcopy = %ld\n",
 		    Heaphighwater, NumNcopy, Nlink, NumLcopy);
 
@@ -515,7 +515,7 @@ backlinks(void)
 			fprintf(stderr, "backlink: %s <- %s\n",
 			    nomap->name, child->name);
 	}
-	vprint(stderr, "%d backlinks\n", Nheap);
+	Vprintf(stderr, "%d backlinks\n", Nheap);
 }
 
 // find a mapped copy of n if it exists

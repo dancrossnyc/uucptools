@@ -20,22 +20,22 @@ isadomain(char *domain)
 {
 
 	if (ondomlist(&good, domain)) {
-		vprint(stderr, "%s on\n", domain);
+		Vprintf(stderr, "%s on\n", domain);
 		return 1;
 	}
 
 	if (ondomlist(&bad, domain)) {
-		vprint(stderr, "%s off\n", domain);
+		Vprintf(stderr, "%s off\n", domain);
 		return 0;
 	}
 
 	if (nslookup(domain)) {
 		adddom(&good, domain);
-		vprint(stderr, "%s add\n", domain);
+		Vprintf(stderr, "%s add\n", domain);
 		return 1;
 	} else {
 		adddom(&bad, domain);
-		vprint(stderr, "%s del\n", domain);
+		Vprintf(stderr, "%s del\n", domain);
 		return 0;
 	}
 }

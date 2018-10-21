@@ -305,7 +305,7 @@ ncopy(Node *parent, Link *l)
 {
 	Node *n, *ncp;
 
-	vprint(stderr, "<%s> <- %s\n", l->to->name, parent->name);
+	Vprintf(stderr, "<%s> <- %s\n", l->to->name, parent->name);
 	n = l->to;
 	if (REUSABLE(n, l)) {
 		Nlink++;
@@ -354,14 +354,7 @@ lcopy(Node *parent, Node *n)
 		// comment needed
 		if (ALTEREGO(l->to, parent))
 			continue;
-<<<<<<< HEAD
-		vprint(stderr, "\t-> %s\n", l->to->name);
-=======
-#ifdef DEBUG
-		if (Vflag > 1)
-			fprintf(stderr, "\t-> %s\n", l->to->name);
-#endif
->>>>>>> b35f400... Comment, formatting, and NULL cleanups.
+		Vprintf(stderr, "\t-> %s\n", l->to->name);
 		NumLcopy++;
 		lcp = newlink();
 		*lcp = *l;	// struct copy

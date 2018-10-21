@@ -12,7 +12,7 @@ typedef struct Dom Dom;
 extern int Vflag;
 
 static inline int
-vprint(FILE *fp, const char *fmt, ...)
+Vprintf(FILE *fp, const char *fmt, ...)
 {
 	int r = 0;
 
