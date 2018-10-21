@@ -8,10 +8,10 @@
 #include "def.h"
 #include "fns.h"
 
-/* globals */
+// globals
 long Ncount;
 
-/* privates */
+// privates
 static void nomem(void);
 static Link *Lcache;
 
@@ -29,7 +29,7 @@ newlink(void)
 	return rval;
 }
 
-/* caution: this destroys the contents of next */
+// caution: this destroys the contents of next
 void
 freelink(Link *l)
 {

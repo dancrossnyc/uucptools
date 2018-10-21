@@ -10,24 +10,24 @@
 #include "def.h"
 #include "fns.h"
 
-/* scanner states (yylex, parse) */
+// scanner states (yylex, parse)
 #define OTHER		0
 #define COSTING		1
 #define NEWLINE		2
 #define FILENAME	3
 
-/* exports */
+// exports
 long Tcount;
 
-/* privates */
+// privates
 static void fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir);
 static void adjust(Node *n, Cost cost);
 static int yylex(void);
 static int yywrap(void);
 static int getword(char *str, int c);
-static int Scanstate = NEWLINE;	/* scanner (yylex) state */
+static int Scanstate = NEWLINE;	// scanner (yylex) state
 
-/* flags for ys_flags */
+// flags for ys_flags
 #define TERMINAL 1
 %}
 
@@ -59,7 +59,7 @@ static int Scanstate = NEWLINE;	/* scanner (yylex) state */
 %left	'*' '/'
 
 %%
-map	:	/* empty */
+map	:	// empty
 	|	map		EOL
 	|	map links	EOL
 	|	map aliases	EOL
@@ -80,7 +80,7 @@ links	: host site cost {
 			l->flag |= LGATEWAY;
 		if ($2.ys_flag & TERMINAL)
 			l->flag |= LTERMINAL;
-	  }			
+	  }
 	| links ',' site cost {
 		Link *l;
 
@@ -90,7 +90,7 @@ links	: host site cost {
 		if ($3.ys_flag & TERMINAL)
 			l->flag |= LTERMINAL;
 	  }
-	| links ','	/* benign error */
+	| links ','	// benign error
 	;
 
 host	: HOST		{$$ = addnode($1);}
@@ -131,7 +131,7 @@ asite	: SITE {
 
 aliases	: host '=' SITE	{alias($1, addnode($3));}
 	| aliases ',' SITE	{alias($1, addnode($3));}
-	| aliases ','	/* benign error */
+	| aliases ','	// benign error
 	;
 
 network	: nhost '{' nlist '}' cost	{fixnet($1, $3, $5, DEFNET, DEFDIR);}
@@ -153,36 +153,36 @@ nlist	: SITE		{$$ = addnode($1);}
 			$$ = n;
 		}
 	  }
-	| nlist ','	/* benign error */
+	| nlist ','	// benign error
 	;
-		
-private	: PRIVATE '{' plist '}'			/* list of privates */
-	| PRIVATE '{' '}'	{fixprivate();}	/* end scope of privates */
+
+private	: PRIVATE '{' plist '}'			// list of privates
+	| PRIVATE '{' '}'	{fixprivate();}	// end scope of privates
 	;
 
 plist	: SITE			{addprivate($1)->flag |= ISPRIVATE;}
 	| plist ',' SITE	{addprivate($3)->flag |= ISPRIVATE;}
-	| plist ','		/* benign error */
+	| plist ','		// benign error
 	;
 
 dead	: DEAD '{' dlist '}';
 
 dlist	: delem
 	| dlist ',' delem
-	| dlist ','		/* benign error */
+	| dlist ','		// benign error
 	;
 
 delem	: SITE			{deadlink(addnode($1), (Node *) 0);}
 	| usite NET usite	{deadlink($1, $3);}
 	;
 
-usite	: SITE	{$$ = addnode($1);} ;	/* necessary unit production */
+usite	: SITE	{$$ = addnode($1);} ;	// necessary unit production
 
 delete	: DELETE '{' dellist '}';
 
 dellist	: delelem
 	| dellist ',' delelem
-	| dellist ','		/* benign error */
+	| dellist ','		// benign error
 	;
 
 delelem	: SITE {
@@ -191,7 +191,7 @@ delelem	: SITE {
 		n = addnode($1);
 		deletelink(n, (Node *) 0);
 		n->flag |= ISPRIVATE;
-		/* reset Home if it's deleted */
+		// reset Home if it's deleted
 		if (n == Home)
 			Home = addnode(Home->name);
 	  }
@@ -207,7 +207,7 @@ adjust	: ADJUST '{' adjlist '}' ;
 
 adjlist	: adjelem
 	| adjlist ',' adjelem
-	| adjlist ','		/* benign error */
+	| adjlist ','		// benign error
 	;
 
 adjelem	: usite cost	{adjust($1, $2);} ;
@@ -235,7 +235,7 @@ cexpr	: COST
 void
 yyerror(char *s)
 {
-	/* a concession to bsd error(1) */
+	// a concession to bsd error(1)
 	fprintf(stderr, "\"%s\", ", Cfile);
 	fprintf(stderr, "line %d: %s\n", Lineno, s);
 }
@@ -268,25 +268,25 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 	}
 	network->flag |= NNET;
 
-	/* insert the links */
+	// insert the links
 	for (member = nlist ; member; member = nextnet) {
 
-		/* network -> member, cost is 0 */
+		// network -> member, cost is 0
 		l = addlink(network, member, (Cost) 0, netchar, netdir);
 		if (GATEWAYED(network) && GATEWAYED(member))
 			l->flag |= LGATEWAY;
 
-		/* member -> network, cost is parameter */
-		/* never ever ever crawl up from a domain*/
+		// member -> network, cost is parameter
+		// never ever ever crawl up from a domain
 		if (!ISADOMAIN(network))
 			(void) addlink(member, network, cost, netchar, netdir);
 
 		nextnet = member->net;
-		member->net = 0;	/* clear for later use */
+		member->net = 0;	// clear for later use
 	}
 }
 
-/* scanner */
+// scanner
 
 #define QUOTE '"'
 #define STR_EQ(s1, s2) (s1[2] == s2[2] && strcmp(s1, s2) == 0)
@@ -296,7 +296,7 @@ static struct ctable {
 	char *cname;
 	Cost cval;
 } ctable[] = {
-	/* ordered by frequency of appearance in a "typical" dataset */
+	// ordered by frequency of appearance in a "typical" dataset
 	{"DIRECT", 200},
 	{"DEMAND", 300},
 	{"DAILY", 5000},
@@ -304,13 +304,13 @@ static struct ctable {
 	{"DEDICATED", 100},
 	{"EVENING", 2000},
 	{"LOCAL", 25},
-	{"LOW", 5},	/* baud rate, quality penalty */
+	{"LOW", 5},	// baud rate, quality penalty
 	{"DEAD", MILLION},
 	{"POLLED", 5000},
 	{"WEEKLY", 30000},
-	{"HIGH", -5},	/* baud rate, quality bonus */
-	{"FAST", -80},	/* high speed (>= 9.6 kbps) modem */
-	/* deprecated */
+	{"HIGH", -5},	// baud rate, quality bonus
+	{"FAST", -80},	// high speed (>= 9.6 kbps) modem
+	// deprecated
 	{"ARPA", 100},
 	{"DIALED", 300},
 	{0, 0}
@@ -319,7 +319,7 @@ static struct ctable {
 static int
 yylex()
 {
-	static char retbuf[128];	/* for return to yacc part */
+	static char retbuf[128];	// for return to yacc part
 	int c;
 	char *buf = retbuf;
 	struct ctable *ct;
@@ -329,10 +329,10 @@ yylex()
 	if (feof(stdin) && yywrap())
 		return EOF;
 
-	/* count lines, skip over space and comments */
+	// count lines, skip over space and comments
 	if ((c = getchar()) == EOF)
 		NLRETURN();
-    
+
 continuation:
 	while (c == ' ' || c == '\t')
 		if ((c = getchar()) == EOF)
@@ -343,7 +343,7 @@ continuation:
 			if (c == EOF)
 				NLRETURN();
 
-	/* scan token */
+	// scan token
 	if (c == '\n') {
 		Lineno++;
 		if ((c = getchar()) != EOF) {
@@ -378,7 +378,7 @@ continuation:
 			return COST;
 		}
 
-		return c;	/* pass the buck */
+		return c;	// pass the buck
 
 	case NEWLINE:
 		Scanstate = OTHER;
@@ -444,7 +444,7 @@ continuation:
 /*
  * fill str with the next word in [0-9A-Za-z][-._0-9A-Za-z]+ or a quoted
  * string that contains no newline.  return -1 on failure or EOF, 0 o.w.
- */ 
+ */
 static int
 getword(char *str, int c)
 {
@@ -465,7 +465,7 @@ getword(char *str, int c)
 		return 0;
 	}
 
-	/* host name must start with alphanumeric or `.' */
+	// host name must start with alphanumeric or `.'
 	if (!isalnum(c) && c != '.')
 		return -1;
 
@@ -487,7 +487,7 @@ static int
 yywrap()
 {	char errbuf[100];
 
-	fixprivate();	/* munge private host definitions */
+	fixprivate();	// munge private host definitions
 	Lineno = 1;
 	while (optind < Argc) {
 		if (freopen((Cfile = Argv[optind++]), "r", stdin) != NULL)
@@ -505,9 +505,9 @@ adjust(Node *n, Cost cost)
 {
 	Link *l;
 
-	n->cost += cost;	/* cumulative */
+	n->cost += cost;	// cumulative
 
-	/* hit existing links */
+	// hit existing links
 	for (l = n->link; l; l = l->next) {
 		if ((l->cost += cost) < 0) {
 			char buf[100];

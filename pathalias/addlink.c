@@ -8,11 +8,11 @@
 #include "def.h"
 #include "fns.h"
 
-/* globals */
-char *Netchars = "!:@%";	/* sparse, but sufficient */
-long Lcount;			/* how many edges? */
+// globals
+char *Netchars = "!:@%";	// sparse, but sufficient
+long Lcount;			// how many edges?
 
-/* privates */
+// privates
 static void netbits(Link *l, int netchar, int netdir);
 static void ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message);
 static void ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message);
@@ -35,7 +35,7 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 		if (!DEADLINK(l))
 			break;
 		if (to == l->to) {
-			/* what the hell, use cheaper dead cost */
+			// what the hell, use cheaper dead cost
 			if (cost < l->cost) {
 				l->cost = cost;
 				netbits(l, netchar, netdir);
@@ -46,9 +46,9 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 	}
 
 
-	/* allocate and link in the new link struct */
+	// allocate and link in the new link struct
 	l = newlink();
-	if (cost != INF)	/* ignore back links */
+	if (cost != INF)	// ignore back links
 		Lcount++;
 	if (prev) {
 		l->next = prev->next;
@@ -59,7 +59,7 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 	}
 
 	l->to = to;
-	/* add penalty */
+	// add penalty
 	if ((l->cost = cost + from->cost) < 0) {
 		char buf[100];
 
@@ -85,40 +85,40 @@ deadlink(Node *nleft, Node *nright)
 {
 	Link *l, *lhold = 0, *lprev, *lnext;
 
-	/* DEAD host */
+	// DEAD host
 	if (nright == 0) {
-		nleft->flag |= NDEAD;	/* DEAD host */
+		nleft->flag |= NDEAD;	// DEAD host
 		return;
 	}
 
-	/* DEAD link */
+	// DEAD link
 
-	/* grab <nleft, nright> instances at head of nleft adjacency list */
+	// grab <nleft, nright> instances at head of nleft adjacency list
 	while ((l = nleft->link) != 0 && l->to == nright) {
-		nleft->link = l->next;	/* disconnect */
-		l->next = lhold;	/* terminate */
-		lhold = l;	/* add to lhold */
+		nleft->link = l->next;	// disconnect
+		l->next = lhold;	// terminate
+		lhold = l;	// add to lhold
 	}
 
-	/* move remaining <nleft, nright> instances */
+	// move remaining <nleft, nright> instances
 	for (lprev = nleft->link; lprev && lprev->next;
 	    lprev = lprev->next) {
 		if (lprev->next->to == nright) {
 			l = lprev->next;
-			lprev->next = l->next;	/* disconnect */
-			l->next = lhold;	/* terminate */
+			lprev->next = l->next;	// disconnect
+			l->next = lhold;	// terminate
 			lhold = l;
 		}
 	}
 
-	/* check for emptiness */
+	// check for emptiness
 	if (lhold == 0) {
 		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->flag |=
 		    LDEAD;
 		return;
 	}
 
-	/* reinsert deleted edges as DEAD links */
+	// reinsert deleted edges as DEAD links
 	for (l = lhold; l; l = lnext) {
 		lnext = l->next;
 		addlink(nleft, nright, l->cost, NETCHAR(l),
@@ -168,20 +168,20 @@ ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
-		/* overkill, but you asked for it! */
+		// overkill, but you asked for it!
 		if (l->to == 0) {
 			if (EQ(from, l->from) || EQ(to, l->from))
 				break;
 		} else if (EQ(from, l->from) && EQ(to, l->to))
 			break;
 		else if (EQ(from, l->to) && EQ(to, l->from))
-			break;	/* potential dead backlink */
+			break;	// potential dead backlink
 	}
 	if (i < Tracecount)
 		ltrprint(from, to, cost, netchar, netdir, message);
 }
 
-/* print a trace item */
+// print a trace item
 static void
 ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 {
@@ -241,7 +241,7 @@ deletelink(Node *from, Node *to)
 
 	l = from->link;
 
-	/* delete all neighbors of from */
+	// delete all neighbors of from
 	if (to == 0) {
 		while (l) {
 			LTRACE(from, l->to, l->cost, NETCHAR(l),
@@ -254,7 +254,7 @@ deletelink(Node *from, Node *to)
 		return;
 	}
 
-	/* delete from head of list */
+	// delete from head of list
 	while (l && EQ(to, l->to)) {
 		LTRACE(from, to, l->cost, NETCHAR(l), NETDIR(l),
 		    "DELETED");
@@ -263,7 +263,7 @@ deletelink(Node *from, Node *to)
 		l = from->link = lnext;
 	}
 
-	/* delete from interior of list */
+	// delete from interior of list
 	if (l == 0)
 		return;
 	for (lnext = l->next; lnext; lnext = l->next) {
@@ -272,8 +272,8 @@ deletelink(Node *from, Node *to)
 			    "DELETED");
 			l->next = lnext->next;
 			freelink(lnext);
-			/* continue processing this link */
+			// continue processing this link
 		} else
-			l = lnext;	/* next link */
+			l = lnext;	// next link
 	}
 }

@@ -27,11 +27,11 @@ main(int argc, char *argv[])
 	ProgName = argv[0];
 	while ((c = getopt(argc, argv, "o:a")) != -1)
 		switch (c) {
-		case 'o':	/* dbm output file */
+		case 'o':	// dbm output file
 			Ofile = optarg;
 			break;
 
-		case 'a':	/* append mode */
+		case 'a':	// append mode
 			append++;
 			break;
 
@@ -109,16 +109,16 @@ makedb(char *ifile)
 		char *op, *end;
 
 		end = line + strlen(line);
-		end[-1] = 0;	/* kill newline, stuff null terminator */
+		end[-1] = 0;	// kill newline, stuff null terminator
 		op = strchr(line, '\t');
 		if (op != NULL) {
 			*op++ = 0;
-			key.dsize = op - line;	/* 0 terminated */
+			key.dsize = op - line;	// 0 terminated
 			val.dptr = op;
-			val.dsize = end - op;	/* 0 terminated */
+			val.dsize = end - op;	// 0 terminated
 		} else {
-			key.dsize = end - line;	/* 0 terminated */
-			val.dptr = "\0";	/* why must i do this? */
+			key.dsize = end - line;	// 0 terminated
+			val.dptr = "\0";	// why must i do this?
 			val.dsize = 1;
 		}
 		if (store(key, val) < 0)

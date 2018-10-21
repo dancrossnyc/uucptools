@@ -14,7 +14,7 @@
  * use lots of char bufs -- profiling indicates this costs about 5 kbytes
  */
 
-/* privates */
+// privates
 static void preorder(Link *l, char *ppath);
 static void setpath(Link *l, char *ppath, char *npath, size_t nlen);
 static void printhost(Node *n, char *path, Cost cost);
@@ -22,9 +22,9 @@ static void printdomain(Node *n, char *path, Cost cost);
 static size_t hostpath(char *path, size_t len, Link *l, int netchar);
 static int printable(Node *n);
 
-static Link *Ancestor;		/* for -f option */
+static Link *Ancestor;		// for -f option
 
-/* in practice, even the longest paths are < 100 bytes */
+// in practice, even the longest paths are < 100 bytes
 #define UUPATHSIZE 512
 
 void
@@ -33,7 +33,7 @@ printit(void)
 	Link *l;
 	char pbuf[UUPATHSIZE];
 
-	/* print home */
+	// print home
 	if (Cflag)
 		printf("%ld\t", (long)Home->cost);
 	printf("%s\t%%s\n", Home->name);
@@ -58,11 +58,11 @@ static void
 preorder(Link *l, char *ppath)
 {
 	Node *n;
-	Node *ncp;		/* circular copy list */
+	Node *ncp;		// circular copy list
 	Cost cost;
 	char npath[UUPATHSIZE];
-	short p_dir;		/* DIR bits of parent (for nets) */
-	char p_op;		/* net op of parent (for nets) */
+	short p_dir;		// DIR bits of parent (for nets)
+	char p_op;		// net op of parent (for nets)
 
 	setpath(l, ppath, npath, sizeof npath);
 	n = l->to;
@@ -81,15 +81,15 @@ preorder(Link *l, char *ppath)
 			ncp->flag |= PRINTED;
 	}
 
-	/* prepare routing bits for domain members */
+	// prepare routing bits for domain members
 	p_dir = l->flag & LDIR;
 	p_op = l->netop;
 
-	/* recursion */
+	// recursion
 	for (l = n->link; l; l = l->next) {
 		if (!(l->flag & LTREE))
 			continue;
-		/* network member inherits the routing syntax of its gateway */
+		// network member inherits the routing syntax of its gateway
 		if (ISANET(n)) {
 			l->flag = (l->flag & ~LDIR) | p_dir;
 			l->netop = p_op;
@@ -108,19 +108,19 @@ printable(Node *n)
 	if (n->flag & PRINTED)
 		return 0;
 
-	/* is there a cheaper copy? */
+	// is there a cheaper copy?
 	for (ncp = n->copy; n != ncp; ncp = ncp->copy) {
 		if (!(ncp->flag & MAPPED))
-			continue;	/* unmapped copy */
+			continue;	// unmapped copy
 
 		if (n->cost > ncp->cost)
-			return 0;	/* cheaper copy */
+			return 0;	// cheaper copy
 
 		if (n->cost == ncp->cost && !(ncp->flag & NTERMINAL))
-			return 0;	/* synthetic copy */
+			return 0;	// synthetic copy
 	}
 
-	/* will a domain route suffice? */
+	// will a domain route suffice?
 	if (Dflag && !ISANET(n) && ISADOMAIN(n->parent)) {
 		/*
 		 * are there any interesting links?  a link
@@ -128,7 +128,7 @@ printable(Node *n)
 		 * to the parent, and is not an alias.
 		 */
 
-		/* check n */
+		// check n
 		for (l = n->link; l; l = l->next) {
 			if (l->to == n->parent)
 				continue;
@@ -136,7 +136,7 @@ printable(Node *n)
 				return 1;
 		}
 
-		/* check copies of n */
+		// check copies of n
 		for (ncp = n->copy; ncp != n; ncp = ncp->copy) {
 			for (l = ncp->link; l; l = l->next) {
 				if (l->to == n->parent)
@@ -146,7 +146,7 @@ printable(Node *n)
 			}
 		}
 
-		/* domain route suffices */
+		// domain route suffices
 		return 0;
 	}
 	return 1;
@@ -164,7 +164,7 @@ setpath(Link *l, char *ppath, char *npath, size_t nlen)
 	parent = next->parent;
 	netchar = NETCHAR(l);
 
-	/* for magic @->% conversion */
+	// for magic @->% conversion
 	if (parent->flag & ATSIGN)
 		next->flag |= ATSIGN;
 
@@ -196,12 +196,12 @@ setpath(Link *l, char *ppath, char *npath, size_t nlen)
 
 	if (netchar == '@') {
 		if (next->flag & ATSIGN)
-			netchar = '%';	/* shazam?  shaman? */
+			netchar = '%';	// shazam?  shaman?
 		else
 			next->flag |= ATSIGN;
 	}
 
-	/* remainder should be a sprintf -- foo on '%' as an operator */
+	// remainder should be a sprintf -- foo on '%' as an operator
 	for (; nlen > 0 && (*npath = *ppath) != 0; ppath++) {
 		if (*ppath != '%') {
 			npath++;
@@ -240,7 +240,7 @@ hostpath(char *path, size_t len, Link *l, int netchar)
 	r = 0;
 	prev = l->to->parent;
 	if (NETDIR(l) == LLEFT) {
-		/* host!%s */
+		// host!%s
 		ll = strlen(l->to->name);
 		if (ll >= len)
 			die("hostpath: name too long");
@@ -265,7 +265,7 @@ hostpath(char *path, size_t len, Link *l, int netchar)
 		memmove(path, tmp, ll + 1);
 		r += ll;
 	} else {
-		/* %s@host */
+		// %s@host
 		snprintf(tmp, sizeof tmp, "%%s%s", (netchar == '%') ? "%" : "");
 		ll = strlen(tmp);
 		if (len <= ll)
@@ -304,7 +304,7 @@ printhost(Node *n, char *path, Cost cost)
 	if (n->flag & PRINTED)
 		die("printhost called twice");
 	n->flag |= PRINTED;
-	/* skip private hosts */
+	// skip private hosts
 	if ((n->flag & ISPRIVATE) == 0) {
 		if (Cflag)
 			printf("%ld\t", (long)cost);
@@ -331,7 +331,7 @@ printdomain(Node *n, char *path, Cost cost)
 	 * are private and sub.dom.ain is not private.
 	 */
 	if (!ISADOMAIN(n->parent)) {
-		/* top-level domain */
+		// top-level domain
 		if (n->flag & ISPRIVATE) {
 			vprint(stderr,
 			    "ignoring private top-level domain %s\n",
@@ -339,7 +339,7 @@ printdomain(Node *n, char *path, Cost cost)
 			return;
 		}
 	} else {
-		/* subdomain */
+		// subdomain
 		for (p = n->parent; ISADOMAIN(p); p = p->parent)
 			if (!(p->flag & ISPRIVATE))
 				return;
@@ -347,7 +347,7 @@ printdomain(Node *n, char *path, Cost cost)
 			return;
 	}
 
-	/* print it (at last!) */
+	// print it (at last!)
 	if (Cflag)
 		printf("%ld\t", (long)cost);
 	do {

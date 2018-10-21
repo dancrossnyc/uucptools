@@ -11,11 +11,11 @@
 
 #define EQ(n, s)	(*(n)->name == *(s) && strcmp((n)->name, (s)) == 0)
 
-/* globals */
-Node **Table;			/* hash table ^ priority queue */
-long Tabsize;			/* size of Table */
+// globals
+Node **Table;			// hash table ^ priority queue
+long Tabsize;			// size of Table
 
-/* privates */
+// privates
 static void crcinit(void);
 static void rehash(void);
 static void lowercase(char *s);
@@ -23,7 +23,7 @@ static unsigned long fold(char *s);
 static unsigned long hash(char *name, int unique);
 static Node *isprivate(char *name);
 
-static Node *Private;		/* list of private nodes in current input file */
+static Node *Private;		// list of private nodes in current input file
 /*
  * these numbers are chosen because:
  *	-> they are prime,
@@ -40,7 +40,7 @@ static long Primes[] = {
 };
 
 static int Tabindex;
-static long Tab128;		/* Tabsize * 128 */
+static long Tab128;		// Tabsize * 128
 
 Node *
 addnode(char *name)
@@ -52,7 +52,7 @@ addnode(char *name)
 	if (Iflag)
 		lowercase(name);
 
-	/* is it a private host? */
+	// is it a private host?
 	n = isprivate(name);
 	if (n)
 		return n;
@@ -64,7 +64,7 @@ addnode(char *name)
 	n = newnode();
 	n->name = strsave(name);
 	Table[i] = n;
-	n->tloc = i;		/* essentially a back link to the table */
+	n->tloc = i;		// essentially a back link to the table
 
 	if (InetFlag && Home != 0
 	    && (dot = strrchr(name, '.')) != 0 && isadomain(dot + 1))
@@ -112,9 +112,9 @@ alias(Node *n1, Node *n2)
  *	   4   8   0   0   0   0   0   0
  */
 
-#define POLY32 0xf5000000	/* 32-bit polynomial */
-#define POLY31 0x48000000	/* 31-bit polynomial */
-#define POLY POLY31		/* use 31-bit to avoid sign problems */
+#define POLY32 0xf5000000	// 32-bit polynomial
+#define POLY31 0x48000000	// 31-bit polynomial
+#define POLY POLY31		// use 31-bit to avoid sign problems
 
 static long CrcTable[128];
 
@@ -147,7 +147,7 @@ fold(char *s)
 
 
 #define HASH1(n) ((n) % Tabsize);
-#define HASH2(n) (Tabsize - 2 - ((n) % (Tabsize-2)))	/* sedgewick */
+#define HASH2(n) (Tabsize - 2 - ((n) % (Tabsize-2)))	// sedgewick
 
 /*
  * when alpha is 0.79, there should be 2 probes per access (gonnet).
@@ -165,14 +165,14 @@ hash(char *name, int unique)
 	Node *n;
 
 	if (isfull(Ncount)) {
-		if (Tabsize == 0) {	/* first time */
+		if (Tabsize == 0) {	// first time
 			crcinit();
 			Tabindex = 0;
 			Tabsize = Primes[0];
 			Table = newtable(Tabsize);
 			Tab128 = (HIGHWATER * Tabsize * 128L) / 100L;
 		} else
-			rehash();	/* more, more! */
+			rehash();	// more, more!
 	}
 
 	probe = fold(name);
@@ -190,14 +190,14 @@ hash(char *name, int unique)
 	 */
 	while ((n = Table[probe]) != 0) {
 		if (EQ(n, name) && !(n->flag & ISPRIVATE) && !unique)
-			return probe;	/* this is it! */
+			return probe;	// this is it!
 
 		while (probe < hash2)
 			probe += Tabsize;
-		probe -= hash2;	/* double hashing */
+		probe -= hash2;	// double hashing
 	}
 
-	return probe;		/* brand new */
+	return probe;		// brand new
 }
 
 static void
@@ -207,19 +207,19 @@ rehash(void)
 	long probe;
 	long osize;
 
-	optr = Table + Tabsize - 1;	/* ptr to last */
+	optr = Table + Tabsize - 1;	// ptr to last
 	otable = Table;
 	osize = Tabsize;
 	Tabsize = Primes[++Tabindex];
 	if (Tabsize == 0)
-		die("too many hosts");	/* need more prime numbers */
+		die("too many hosts");	// need more prime numbers
 	vprint(stderr, "rehash into %d\n", Tabsize);
 	Table = newtable(Tabsize);
 	Tab128 = (HIGHWATER * Tabsize * 128L) / 100L;
 
 	do {
 		if (*optr == 0)
-			continue;	/* empty slot in old table */
+			continue;	// empty slot in old table
 		probe = hash((*optr)->name,
 		    ((*optr)->flag & ISPRIVATE) != 0);
 		if (Table[probe] != 0)
@@ -230,13 +230,13 @@ rehash(void)
 	freetable(otable, osize);
 }
 
-/* convert to lower case in place */
+// convert to lower case in place
 static void
 lowercase(char *s)
 {
 	do {
 		if (isupper(*s))
-			*s -= 'A' - 'a';	/* ASCII */
+			*s -= 'A' - 'a';	// ASCII
 	} while (*s++);
 }
 
@@ -254,7 +254,7 @@ isprivate(char *name)
 	return 0;
 }
 
-/*  Add a private node so private that nobody can find it.  */
+// Add a private node so private that nobody can find it.
 Node *
 addhidden(char *name)
 {
@@ -282,15 +282,15 @@ fixprivate(void)
 	long i;
 
 	for (n = Private; n != 0; n = next) {
-		n->flag |= ISPRIVATE;	/* overkill, but safe */
+		n->flag |= ISPRIVATE;	// overkill, but safe
 		i = hash(n->name, 1);
 		if (Table[i] != 0)
 			die("impossible private node error");
 
 		Table[i] = n;
-		n->tloc = i;	/* essentially a back link to the table */
+		n->tloc = i;	// essentially a back link to the table
 		next = n->private;
-		n->private = 0;	/* clear for later use */
+		n->private = 0;	// clear for later use
 	}
 	Private = 0;
 }

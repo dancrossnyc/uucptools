@@ -8,14 +8,14 @@
 #include "def.h"
 #include "fns.h"
 
-/* privates */
+// privates
 static void dumpnode(Node *from);
 static void untangle(void);
 static void dfs(Node *n);
 static int height(Node *n);
 static Link *lcopy(Node *parent, Node *n);
 
-static FILE *Gstream;		/* for dumping graph */
+static FILE *Gstream;		// for dumping graph
 
 /*
  * slide everything from Table[low] to Table[high]
@@ -26,16 +26,16 @@ pack(long low, long high)
 {
 	long hole, next;
 
-	/* find first "hole " */
+	// find first "hole "
 	for (hole = high; hole >= low && Table[hole] != 0; --hole);
 
-	/* repeatedly move next filled entry into last hole */
+	// repeatedly move next filled entry into last hole
 	for (next = hole - 1; next >= low; --next) {
 		if (Table[next] != 0) {
 			Table[hole] = Table[next];
 			Table[hole]->tloc = hole;
 			Table[next] = 0;
-			while (Table[--hole] != 0)	/* find next hole */
+			while (Table[--hole] != 0)	// find next hole
 				;
 		}
 	}
@@ -75,16 +75,16 @@ dumpgraph(void)
 		return;
 	}
 
-	untangle();		/* untangle net cycles for proper output */
+	untangle();		// untangle net cycles for proper output
 
 	for (i = Hashpart; i < Tabsize; i++) {
 		n = Table[i];
 		if (n == 0)
-			continue;	/* impossible, but ... */
-		/* a minor optimization ... */
+			continue;	// impossible, but ...
+		// a minor optimization ...
 		if (n->link == 0)
 			continue;
-		/* pathparse doesn't need these */
+		// pathparse doesn't need these
 		if (n->flag & NNET)
 			continue;
 		dumpnode(n);
@@ -101,12 +101,12 @@ dumpnode(Node *from)
 	for (l = from->link; l; l = l->next) {
 		to = l->to;
 		if (from == to)
-			continue;	/* oops -- it's me! */
+			continue;	// oops -- it's me!
 
 		if ((to->flag & NNET) == 0) {
-			/* host -> host -- print host>host */
+			// host -> host -- print host>host
 			if (l->cost == INF)
-				continue;	/* phoney link */
+				continue;	// phoney link
 			fputs(from->name, Gstream);
 			putc('>', Gstream);
 			fputs(to->name, Gstream);
@@ -124,7 +124,7 @@ dumpnode(Node *from)
 				    0)
 					break;
 			if (ll)
-				continue;	/* dup */
+				continue;	// dup
 			ll = newlink();
 			ll->next = lnet;
 			ll->to = to;
@@ -132,9 +132,9 @@ dumpnode(Node *from)
 		}
 	}
 
-	/* dump nets */
+	// dump nets
 	if (lnet) {
-		/* nets -- print host@\tnet,net, ... */
+		// nets -- print host@\tnet,net, ...
 		fputs(from->name, Gstream);
 		putc('@', Gstream);
 		putc('\t', Gstream);
@@ -240,19 +240,19 @@ tiebreaker(Node *n, Node *newp)
 
 	oldp = n->parent;
 
-	/* given the choice, avoid gatewayed nets */
+	// given the choice, avoid gatewayed nets
 	if (GATEWAYED(newp) && !GATEWAYED(oldp))
 		return OLDP;
 	if (!GATEWAYED(newp) && GATEWAYED(oldp))
 		return NEWP;
 
-	/* look at real parents, not nets */
+	// look at real parents, not nets
 	while ((oldp->flag & NNET) && oldp->parent)
 		oldp = oldp->parent;
 	while ((newp->flag & NNET) && newp->parent)
 		newp = newp->parent;
 
-	/* use fewer hops, if possible */
+	// use fewer hops, if possible
 	metric = height(oldp) - height(newp);
 	if (metric < 0)
 		return OLDP;
@@ -266,7 +266,7 @@ tiebreaker(Node *n, Node *newp)
 	npname = newp->name;
 	name = n->name;
 
-	/* use longest common prefix with parent */
+	// use longest common prefix with parent
 	while (*opname == *name && *npname == *name && *name) {
 		opname++;
 		npname++;
@@ -277,14 +277,14 @@ tiebreaker(Node *n, Node *newp)
 	if (*npname == *name)
 		return NEWP;
 
-	/* use shorter host name */
+	// use shorter host name
 	metric = strlen(opname) - strlen(npname);
 	if (metric < 0)
 		return OLDP;
 	if (metric > 0)
 		return NEWP;
 
-	/* use larger lexicographically */
+	// use larger lexicographically
 	metric = strcmp(opname, npname);
 	if (metric < 0)
 		return NEWP;
@@ -323,16 +323,16 @@ ncopy(Node *parent, Link *l)
 	n = l->to;
 	if (REUSABLE(n, l)) {
 		Nlink++;
-		return n->copy;	/* re-use */
+		return n->copy;	// re-use
 	}
 	NumNcopy++;
 	l->to = ncp = newnode();
-	ncp->name = n->name;	/* nonvolatile */
-	ncp->tloc = --Hashpart;	/* better not be > 20% of total ... */
+	ncp->name = n->name;	// nonvolatile
+	ncp->tloc = --Hashpart;	// better not be > 20% of total ...
 	if (Hashpart == Nheap)
 		die("too many terminal links");
 	Table[Hashpart] = ncp;
-	ncp->copy = n->copy;	/* circular list */
+	ncp->copy = n->copy;	// circular list
 	n->copy = ncp;
 	ncp->link = lcopy(parent, n);
 	ncp->flag =
@@ -359,19 +359,19 @@ lcopy(Node *parent, Node *n)
 	Link *first = 0, *last = 0;
 
 	for (l = n->link; l != 0; l = l->next) {
-		/* skip if dest is already mapped */
+		// skip if dest is already mapped
 		if ((l->to->flag & MAPPED) != 0)
 			continue;
-		/* don't copy terminal links */
+		// don't copy terminal links
 		if ((l->flag & LTERMINAL) != 0)
 			continue;
-		/* comment needed */
+		// comment needed
 		if (ALTEREGO(l->to, parent))
 			continue;
 		vprint(stderr, "\t-> %s\n", l->to->name);
 		NumLcopy++;
 		lcp = newlink();
-		*lcp = *l;	/* struct copy */
+		*lcp = *l;	// struct copy
 		lcp->flag &= ~LTREE;
 		if (ISANET(n))
 			lcp->flag |= LTERMINAL;

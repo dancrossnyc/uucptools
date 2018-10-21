@@ -8,13 +8,13 @@
 #define trprint(stream, n) \
 	fprintf((stream), (n)->flag & NTERMINAL ? "<%s>" : "%s", (n)->name)
 
-/* globals */
-/* invariant while mapping: Nheap < Hashpart */
-long Hashpart;			/* start of unreached nodes */
-long Nheap;			/* end of heap */
+// globals
+// invariant while mapping: Nheap < Hashpart
+long Hashpart;			// start of unreached nodes
+long Nheap;			// end of heap
 long NumNcopy, Nlink, NumLcopy;
 
-/* privates */
+// privates
 static long Heaphighwater;
 static Link **Heap;
 
@@ -34,7 +34,7 @@ static int skipterminalalias(Node *n, Node *next);
 static Cost costof(Node *prev, Link *l);
 static Node *mappedcopy(Node *n);
 
-/* transform the graph to a shortest-path tree by marking tree edges */
+// transform the graph to a shortest-path tree by marking tree edges
 void
 mapit(void)
 {
@@ -42,43 +42,43 @@ mapit(void)
 	Link *l;
 
 	vprint(stderr, "*** mapping\ttcount = %ld\n", Tcount);
-	Tflag = Tflag && Vflag;	/* tracing here only if verbose */
-	/* re-use the hash table space for the heap */
+	Tflag = Tflag && Vflag;	// tracing here only if verbose
+	// re-use the hash table space for the heap
 	Heap = (Link **) Table;
 	Hashpart = pack(0L, Tabsize - 1);
 
-	/* expunge penalties from -a option and make circular copy lists */
+	// expunge penalties from -a option and make circular copy lists
 	resetnodes();
 
-	if (Linkout && *Linkout)	/* dump cheapest links */
+	if (Linkout && *Linkout)	// dump cheapest links
 		showlinks();
-	if (Graphout && *Graphout)	/* dump the edge list */
+	if (Graphout && *Graphout)	// dump the edge list
 		dumpgraph();
 
-	/* insert Home to get things started */
-	l = newlink();		/* link to get things started */
+	// insert Home to get things started
+	l = newlink();		// link to get things started
 	l->to = Home;
 	(void)dehash(Home);
 	insert(l);
 
-	/* main mapping loop */
+	// main mapping loop
 	do {
 		Heaphighwater = Nheap;
 		while ((l = min_node()) != 0) {
 			l->flag |= LTREE;
 			n = l->to;
-			if (n->flag & MAPPED)	/* sanity check */
+			if (n->flag & MAPPED)	// sanity check
 				die("mapped node in heap");
 			if (Tflag && maptrace(n, n))
-				otracereport(n);	/* tracing */
+				otracereport(n);	// tracing
 			n->flag |= MAPPED;
-			heapchildren(n);	/* add children to heap */
+			heapchildren(n);	// add children to heap
 		}
 		vprint(stderr,
 		    "heap hiwat %ld\nncopy = %ld, nlink = %ld, lcopy = %ld\n",
 		    Heaphighwater, NumNcopy, Nlink, NumLcopy);
 
-		if (Nheap != 0)	/* sanity check */
+		if (Nheap != 0)	// sanity check
 			die("null entry in heap");
 
 		/*
@@ -116,7 +116,7 @@ heapchildren(Node *n)
 
 	for (l = n->link; l; l = l->next) {
 
-		next = l->to;	/* neighboring node */
+		next = l->to;	// neighboring node
 		mtrace = Tflag && maptrace(n, next);
 
 		if (l->flag & LTREE)
@@ -152,19 +152,19 @@ heapchildren(Node *n)
 			mtracereport(n, l, "+\tadd");
 		}
 		next->parent = n;
-		if (dehash(next) == 0) {	/* first time */
+		if (dehash(next) == 0) {	// first time
 			next->cost = cost;
-			insert(l);	/* insert at end */
+			insert(l);	// insert at end
 			heapup(l);
 		} else {
-			/* replace inferior path */
+			// replace inferior path
 			Heap[next->tloc] = l;
 			if (cost > next->cost) {
-				/* increase cost (gateway) */
+				// increase cost (gateway)
 				next->cost = cost;
 				heapdown(l);
 			} else if (cost < next->cost) {
-				/* cheaper route */
+				// cheaper route
 				next->cost = cost;
 
 				heapup(l);
@@ -200,42 +200,42 @@ skipterminalalias(Node *n, Node *next)
  */
 static int
 skiplink(
-    Link *l,			/* new link to this node */
-    Node *parent,		/* (potential) new parent of this node */
-    Cost cost,			/* new cost to this node */
-    int trace			/* trace this link? */
+    Link *l,			// new link to this node
+    Node *parent,		// (potential) new parent of this node
+    Cost cost,			// new cost to this node
+    int trace			// trace this link?
 )
 {
-	Node *n;	/* this node */
-	Link *lheap;	/* old link to this node */
+	Node *n;	// this node
+	Link *lheap;	// old link to this node
 
 	n = l->to;
 
-	/* first time we've reached this node? */
+	// first time we've reached this node?
 	if (n->tloc >= Hashpart)
 		return 0;
 
 	lheap = Heap[n->tloc];
 
-	/* examine links to nets that require gateways */
+	// examine links to nets that require gateways
 	if (GATEWAYED(n)) {
-		/* if exactly one is a gateway, use it */
+		// if exactly one is a gateway, use it
 		if ((lheap->flag & LGATEWAY) && !(l->flag & LGATEWAY)) {
 			if (trace)
 				mtracereport(parent, l, "-\told gateway");
-			return 1;	/* old is gateway */
+			return 1;	// old is gateway
 		}
 		if (!(lheap->flag & LGATEWAY) && (l->flag & LGATEWAY))
-			return 0;	/* new is gateway */
+			return 0;	// new is gateway
 
-		/* no gateway or both gateways;  resolve in standard way ... */
+		// no gateway or both gateways;  resolve in standard way ...
 	}
 
-	/* examine dup link (sanity check) */
+	// examine dup link (sanity check)
 	if (n->parent == parent && (DEADLINK(lheap) || DEADLINK(l)))
 		die("dup dead link");
 
-	/*  examine cost */
+	// examine cost
 	if (cost < n->cost)
 		return 0;
 	if (cost > n->cost) {
@@ -244,7 +244,7 @@ skiplink(
 		return 1;
 	}
 
-	/* all other things being equal, ask the oracle */
+	// all other things being equal, ask the oracle
 	if (tiebreaker(n, parent)) {
 		if (trace)
 			mtracereport(parent, l, "-\ttiebreaker");
@@ -253,7 +253,7 @@ skiplink(
 	return 0;
 }
 
-/* compute cost to next (l->to) via prev */
+// compute cost to next (l->to) via prev
 static Cost
 costof(Node *prev, Link *l)
 {
@@ -261,10 +261,10 @@ costof(Node *prev, Link *l)
 	Cost cost;
 
 	if (l->flag & LALIAS)
-		return prev->cost;	/* by definition */
+		return prev->cost;	// by definition
 
 	next = l->to;
-	cost = prev->cost + l->cost;	/* basic cost */
+	cost = prev->cost + l->cost;	// basic cost
 	if (cost >= INF)
 		return cost + 1;
 
@@ -279,21 +279,21 @@ costof(Node *prev, Link *l)
 	 * life was simpler when pathalias truly computed shortest paths.
 	 */
 	if (DEADLINK(l))
-		cost += INF;	/* dead link */
+		cost += INF;	// dead link
 	else if (DEADHOST(prev))
-		cost += INF;	/* dead parent */
+		cost += INF;	// dead parent
 	else if (GATEWAYED(next) && !(l->flag & LGATEWAY))
-		cost += INF;	/* not gateway */
+		cost += INF;	// not gateway
 	else if (!ISANET(prev)) {
 		if ((NETDIR(l) == LLEFT && (prev->flag & HASRIGHT))
 		    || (NETDIR(l) == LRIGHT && (prev->flag & HASLEFT)))
-			cost += INF;	/* mixed syntax */
+			cost += INF;	// mixed syntax
 	}
 
 	return cost;
 }
 
-/* binary heap implementation of priority queue */
+// binary heap implementation of priority queue
 static void
 insert(Link *l)
 {
@@ -312,9 +312,9 @@ insert(Link *l)
 		return;
 	}
 	if (Vflag && Nheap > Heaphighwater)
-		Heaphighwater = Nheap;	/* diagnostics */
+		Heaphighwater = Nheap;	// diagnostics
 
-	/* insert at the end.  caller must heapup(l). */
+	// insert at the end.  caller must heapup(l).
 	Heap[Nheap] = l;
 	n->tloc = Nheap;
 }
@@ -330,7 +330,7 @@ insert(Link *l)
 static void
 heapup(Link *l)
 {
-	long cindx, pindx;	/* child, parent indices */
+	long cindx, pindx;	// child, parent indices
 	Cost cost;
 	Node *child, *parent;
 
@@ -339,13 +339,13 @@ heapup(Link *l)
 	cost = child->cost;
 	for (cindx = child->tloc; cindx > 1; cindx = pindx) {
 		pindx = cindx / 2;
-		if (Heap[pindx] == 0)	/* sanity check */
+		if (Heap[pindx] == 0)	// sanity check
 			die("impossible error in heapup");
 		parent = Heap[pindx]->to;
 		if (cost > parent->cost)
 			return;
 
-		/* net/domain heuristic */
+		// net/domain heuristic
 		if (cost == parent->cost) {
 			if (!ISANET(child))
 				return;
@@ -358,7 +358,7 @@ heapup(Link *l)
 	}
 }
 
-/* extract min (== Heap[1]) from heap */
+// extract min (== Heap[1]) from heap
 static Link *
 min_node(void)
 {
@@ -369,17 +369,17 @@ min_node(void)
 	if (Nheap == 0)
 		return 0;
 
-	rheap = Heap;		/* in register -- heavily used */
-	rval = rheap[1];	/* return this one */
+	rheap = Heap;		// in register -- heavily used
+	rval = rheap[1];	// return this one
 
-	/* move last entry into root and reheap */
+	// move last entry into root and reheap
 	lastlink = rheap[Nheap];
 	rheap[Nheap] = 0;
 
 	if (--Nheap) {
 		rheap[1] = lastlink;
 		lastlink->to->tloc = 1;
-		heapdown(lastlink);	/* restore heap property */
+		heapdown(lastlink);	// restore heap property
 	}
 
 	return rval;
@@ -395,16 +395,16 @@ static void
 heapdown(Link *l)
 {
 	long pindx, cindx;
-	Link **rheap = Heap;	/* in register -- heavily used */
+	Link **rheap = Heap;	// in register -- heavily used
 	Node *child, *rchild, *parent;
 
 	pindx = l->to->tloc;
-	parent = rheap[pindx]->to;	/* invariant */
+	parent = rheap[pindx]->to;	// invariant
 	for (; (cindx = pindx * 2) <= Nheap; pindx = cindx) {
-		/* pick lhs or rhs child */
+		// pick lhs or rhs child
 		child = rheap[cindx]->to;
 		if (cindx < Nheap) {
-			/* compare with rhs child */
+			// compare with rhs child
 			rchild = rheap[cindx + 1]->to;
 			/*
 			 * use rhs child if smaller than lhs child.
@@ -420,7 +420,7 @@ heapdown(Link *l)
 				}
 		}
 
-		/* child is the candidate for swapping */
+		// child is the candidate for swapping
 		if (parent->cost < child->cost)
 			break;
 
@@ -440,13 +440,13 @@ heapdown(Link *l)
 	}
 }
 
-/* exchange Heap[i] and Heap[j] pointers */
+// exchange Heap[i] and Heap[j] pointers
 static void
 heapswap(long i, long j)
 {
 	Link *temp, **rheap;
 
-	rheap = Heap;		/* heavily used -- put in register */
+	rheap = Heap;		// heavily used -- put in register
 	temp = rheap[i];
 	rheap[i] = rheap[j];
 	rheap[j] = temp;
@@ -454,14 +454,14 @@ heapswap(long i, long j)
 	rheap[i]->to->tloc = i;
 }
 
-/* return 1 if n is already de-hashed (tloc < Hashpart), 0 o.w. */
+// return 1 if n is already de-hashed (tloc < Hashpart), 0 o.w.
 static int
 dehash(Node *n)
 {
 	if (n->tloc < Hashpart)
 		return 1;
 
-	/* swap with entry in Table[Hashpart] */
+	// swap with entry in Table[Hashpart]
 	Table[Hashpart]->tloc = n->tloc;
 	Table[n->tloc] = Table[Hashpart];
 	Table[Hashpart] = n;
@@ -488,10 +488,10 @@ backlinks(void)
 	Node *nomap;
 	long i;
 
-	/* hosts from Hashpart to Tabsize are unreachable */
+	// hosts from Hashpart to Tabsize are unreachable
 	for (i = Hashpart; i < Tabsize; i++) {
 		nomap = Table[i];
-		/* if a copy has been mapped, we're ok */
+		// if a copy has been mapped, we're ok
 		if (nomap->copy != nomap) {
 			dehash(nomap);
 			Table[nomap->tloc] = 0;
@@ -499,12 +499,12 @@ backlinks(void)
 			continue;
 		}
 
-		/* TODO: simplify this */
-		/* add back link from minimal cost child */
+		// TODO: simplify this
+		// add back link from minimal cost child
 		child = 0;
 		for (l = nomap->link; l; l = l->next) {
 			n = l->to;
-			/* never ever ever crawl out of a domain */
+			// never ever ever crawl out of a domain
 			if (ISADOMAIN(n))
 				continue;
 			if ((n = mappedcopy(n)) == 0)
@@ -516,7 +516,7 @@ backlinks(void)
 			if (n->cost > child->cost)
 				continue;
 			if (n->cost == child->cost) {
-				nomap->parent = child;	/* for tiebreaker */
+				nomap->parent = child;	// for tiebreaker
 				if (tiebreaker(nomap, n))
 					continue;
 			}
@@ -525,7 +525,7 @@ backlinks(void)
 		if (child == 0)
 			continue;
 		(void)dehash(nomap);
-		l = addlink(child, nomap, INF, DEFNET, DEFDIR);	/* INF cost */
+		l = addlink(child, nomap, INF, DEFNET, DEFDIR);	// INF cost
 		nomap->parent = child;
 		nomap->cost = costof(child, l);
 		insert(l);
@@ -537,7 +537,7 @@ backlinks(void)
 	vprint(stderr, "%d backlinks\n", Nheap);
 }
 
-/* find a mapped copy of n if it exists */
+// find a mapped copy of n if it exists
 static Node *
 mappedcopy(Node *n)
 {
@@ -563,17 +563,17 @@ setheapbits(Link *l)
 
 	n = l->to;
 	parent = n->parent;
-	n->flag &= ~(NALIAS | HASLEFT | HASRIGHT);	/* reset */
+	n->flag &= ~(NALIAS | HASLEFT | HASRIGHT);	// reset
 
-	/* record whether link is an alias */
+	// record whether link is an alias
 	if (l->flag & LALIAS) {
 		n->flag |= NALIAS;
-		/* TERMINALity is inherited by the alias */
+		// TERMINALity is inherited by the alias
 		if (parent->flag & NTERMINAL)
 			n->flag |= NTERMINAL;
 	}
 
-	/* set left/right bits */
+	// set left/right bits
 	if (NETDIR(l) == LLEFT || (parent->flag & HASLEFT))
 		n->flag |= HASLEFT;
 	if (NETDIR(l) == LRIGHT || (parent->flag & HASRIGHT))

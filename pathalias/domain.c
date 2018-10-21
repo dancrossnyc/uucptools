@@ -12,7 +12,7 @@
 #include "def.h"
 #include "fns.h"
 
-/* privates */
+// privates
 static Dom *good, *bad;
 
 /*
