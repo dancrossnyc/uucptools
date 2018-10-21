@@ -14,7 +14,7 @@
 ###
 # internet domain name resolver library
 # enable RESOLVER in config.h
-#RESOLVER = -lresolv
+# RESOLVER = -lresolv
 ### end of configuration section 
 
 
