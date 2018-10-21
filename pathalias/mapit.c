@@ -81,12 +81,12 @@ mapit(void)
 		if (Nheap != 0)	// sanity check
 			die("null entry in heap");
 
-		/*
-		 * add back links from unreachable hosts to reachable
-		 * neighbors, then remap.  asymptotically, this is
-		 * quadratic; in practice, this is done once or twice,
-		 * when n is small.
-		 */
+		//
+		// add back links from unreachable hosts to reachable
+		// neighbors, then remap.  asymptotically, this is
+		// quadratic; in practice, this is done once or twice,
+		// when n is small.
+		//
 		backlinks();
 	} while (Nheap > 0);
 
@@ -109,52 +109,44 @@ mapit(void)
 static void
 heapchildren(Node *n)
 {
-	Link *l;
 	Node *next;
 	int mtrace;
 	Cost cost;
 
-	for (l = n->link; l; l = l->next) {
-
+	for (Link *l = n->link; l != NULL; l = l->next) {
 		next = l->to;	// neighboring node
 		mtrace = Tflag && maptrace(n, next);
-
 		if (l->flag & LTREE)
 			continue;
-
 		if (l->flag & LTERMINAL)
 			l->to = next = ncopy(n, l);
-
 		if ((n->flag & NTERMINAL) && (l->flag & LALIAS)) {
 			if (skipterminalalias(n, next))
 				continue;
 			else
 				l->to = next = ncopy(n, l);
 		}
-
 		if (next->flag & MAPPED) {
 			if (mtrace)
 				mtracereport(n, l, "-\talready mapped");
 			continue;
 		}
 		cost = costof(n, l);
-
 		if (skiplink(l, n, cost, mtrace))
 			continue;
-
-		/*
-		 * put this link in the heap and restore the
-		 * heap property.
-		 */
+		//
+		// put this link in the heap and restore the
+		// heap property.
+		//
 		if (mtrace) {
-			if (next->parent)
+			if (next->parent != NULL)
 				mtracereport(next->parent, l, "*\tdrop");
 			mtracereport(n, l, "+\tadd");
 		}
 		next->parent = n;
 		if (dehash(next) == 0) {	// first time
 			next->cost = cost;
-			insert(l);	// insert at end
+			insert(l);		// insert at end
 			heapup(l);
 		} else {
 			// replace inferior path
@@ -166,20 +158,18 @@ heapchildren(Node *n)
 			} else if (cost < next->cost) {
 				// cheaper route
 				next->cost = cost;
-
 				heapup(l);
 			}
 		}
 		setheapbits(l);
-
 	}
 }
 
-/*
- * n is a terminal node just sucked out of the heap, next is an alias
- * for n.  if n was heaped because of a copy (ALTEREGO) of next, don't
- * heap next -- it will happen over and over and over and ...
- */
+//
+// n is a terminal node just sucked out of the heap, next is an alias
+// for n.  if n was heaped because of a copy (ALTEREGO) of next, don't
+// heap next -- it will happen over and over and over and ...
+//
 static int
 skipterminalalias(Node *n, Node *next)
 {
@@ -189,15 +179,16 @@ skipterminalalias(Node *n, Node *next)
 		if (ALTEREGO(n, next))
 			return 1;
 	}
+
 	return 0;
 }
 
-/*
- * return 1 if we definitely don't want want this link in the
- * shortest path tree, 0 if we might want it, i.e., best so far.
- *
- * if tracing is turned on, report only if this node is being skipped.
- */
+//
+// return 1 if we definitely don't want want this link in the
+// shortest path tree, 0 if we might want it, i.e., best so far.
+//
+// if tracing is turned on, report only if this node is being skipped.
+//
 static int
 skiplink(
     Link *l,			// new link to this node
@@ -250,6 +241,7 @@ skiplink(
 			mtracereport(parent, l, "-\ttiebreaker");
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -262,31 +254,29 @@ costof(Node *prev, Link *l)
 
 	if (l->flag & LALIAS)
 		return prev->cost;	// by definition
-
 	next = l->to;
 	cost = prev->cost + l->cost;	// basic cost
 	if (cost >= INF)
 		return cost + 1;
-
-	/*
-	 * heuristics:
-	 *    charge for a dead link.
-	 *    charge for getting past a terminal host
-	 *      or getting out of a dead host.
-	 *    charge for getting into a gatewayed net (except at a gateway).
-	 *    discourage mixing of syntax (when prev is a host).
-	 *
-	 * life was simpler when pathalias truly computed shortest paths.
-	 */
+	//
+	// heuristics:
+	//    charge for a dead link.
+	//    charge for getting past a terminal host
+	//      or getting out of a dead host.
+	//    charge for getting into a gatewayed net (except at a gateway).
+	//    discourage mixing of syntax (when prev is a host).
+	//
+	// life was simpler when pathalias truly computed shortest paths.
+	//
 	if (DEADLINK(l))
-		cost += INF;	// dead link
+		cost += INF;		// dead link
 	else if (DEADHOST(prev))
-		cost += INF;	// dead parent
+		cost += INF;		// dead parent
 	else if (GATEWAYED(next) && !(l->flag & LGATEWAY))
-		cost += INF;	// not gateway
+		cost += INF;		// not gateway
 	else if (!ISANET(prev)) {
-		if ((NETDIR(l) == LLEFT && (prev->flag & HASRIGHT))
-		    || (NETDIR(l) == LRIGHT && (prev->flag & HASLEFT)))
+		if ((NETDIR(l) == LLEFT && (prev->flag & HASRIGHT)) ||
+		    (NETDIR(l) == LRIGHT && (prev->flag & HASLEFT)))
 			cost += INF;	// mixed syntax
 	}
 
@@ -304,7 +294,7 @@ insert(Link *l)
 		die("insert mapped node");
 
 	Heap[n->tloc] = 0;
-	if (Heap[Nheap + 1] != 0)
+	if (Heap[Nheap + 1] != NULL)
 		die("heap error in insert");
 	if (Nheap++ == 0) {
 		Heap[1] = l;
@@ -319,14 +309,14 @@ insert(Link *l)
 	n->tloc = Nheap;
 }
 
-/*
- * "percolate" up the heap by exchanging with the parent.  as in
- * min_node(), give tiebreaker() a chance to produce better, stable
- * routes by moving nets and domains close to the root, nets closer
- * than domains.
- *
- * i know this seems obscure, but it's harmless and cheap.  trust me.
- */
+//
+// "percolate" up the heap by exchanging with the parent.  as in
+// min_node(), give tiebreaker() a chance to produce better, stable
+// routes by moving nets and domains close to the root, nets closer
+// than domains.
+//
+// i know this seems obscure, but it's harmless and cheap.  trust me.
+//
 static void
 heapup(Link *l)
 {
@@ -335,11 +325,10 @@ heapup(Link *l)
 	Node *child, *parent;
 
 	child = l->to;
-
 	cost = child->cost;
 	for (cindx = child->tloc; cindx > 1; cindx = pindx) {
 		pindx = cindx / 2;
-		if (Heap[pindx] == 0)	// sanity check
+		if (Heap[pindx] == NULL)	// sanity check
 			die("impossible error in heapup");
 		parent = Heap[pindx]->to;
 		if (cost > parent->cost)
@@ -364,20 +353,17 @@ min_node(void)
 {
 	Link *rval, *lastlink;
 
-	Link **rheap;
-
 	if (Nheap == 0)
 		return 0;
 
-	rheap = Heap;		// in register -- heavily used
-	rval = rheap[1];	// return this one
+	rval = Heap[1];	// return this one
 
 	// move last entry into root and reheap
-	lastlink = rheap[Nheap];
-	rheap[Nheap] = 0;
+	lastlink = Heap[Nheap];
+	Heap[Nheap] = 0;
 
 	if (--Nheap) {
-		rheap[1] = lastlink;
+		Heap[1] = lastlink;
 		lastlink->to->tloc = 1;
 		heapdown(lastlink);	// restore heap property
 	}
@@ -385,31 +371,30 @@ min_node(void)
 	return rval;
 }
 
-/*
- * swap Heap[i] with smaller child, iteratively down the tree.
- *
- * given the opportunity, attempt to place nets and domains
- * near the root.  this helps tiebreaker() shun domain routes.
- */
+//
+// swap Heap[i] with smaller child, iteratively down the tree.
+//
+// given the opportunity, attempt to place nets and domains
+// near the root.  this helps tiebreaker() shun domain routes.
+//
 static void
 heapdown(Link *l)
 {
 	long pindx, cindx;
-	Link **rheap = Heap;	// in register -- heavily used
 	Node *child, *rchild, *parent;
 
 	pindx = l->to->tloc;
-	parent = rheap[pindx]->to;	// invariant
+	parent = Heap[pindx]->to;	// invariant
 	for (; (cindx = pindx * 2) <= Nheap; pindx = cindx) {
 		// pick lhs or rhs child
-		child = rheap[cindx]->to;
+		child = Heap[cindx]->to;
 		if (cindx < Nheap) {
 			// compare with rhs child
-			rchild = rheap[cindx + 1]->to;
-			/*
-			 * use rhs child if smaller than lhs child.
-			 * if equal, use rhs if net or domain.
-			 */
+			rchild = Heap[cindx + 1]->to;
+			//
+			// use rhs child if smaller than lhs child.
+			// if equal, use rhs if net or domain.
+			//
 			if (child->cost > rchild->cost) {
 				child = rchild;
 				cindx++;
@@ -424,11 +409,11 @@ heapdown(Link *l)
 		if (parent->cost < child->cost)
 			break;
 
-		/*
-		 * heuristics:
-		 *      move nets/domains up
-		 *      move nets above domains
-		 */
+		//
+		// heuristics:
+		//      move nets/domains up
+		//      move nets above domains
+		//
 		if (parent->cost == child->cost) {
 			if (!ISANET(child))
 				break;
@@ -444,14 +429,13 @@ heapdown(Link *l)
 static void
 heapswap(long i, long j)
 {
-	Link *temp, **rheap;
+	Link *temp;
 
-	rheap = Heap;		// heavily used -- put in register
-	temp = rheap[i];
-	rheap[i] = rheap[j];
-	rheap[j] = temp;
-	rheap[j]->to->tloc = j;
-	rheap[i]->to->tloc = i;
+	temp = Heap[i];
+	Heap[i] = Heap[j];
+	Heap[j] = temp;
+	Heap[j]->to->tloc = j;
+	Heap[i]->to->tloc = i;
 }
 
 // return 1 if n is already de-hashed (tloc < Hashpart), 0 o.w.
@@ -465,51 +449,48 @@ dehash(Node *n)
 	Table[Hashpart]->tloc = n->tloc;
 	Table[n->tloc] = Table[Hashpart];
 	Table[Hashpart] = n;
-
 	n->tloc = Hashpart++;
+
 	return 0;
 }
 
-/*
- * everything reachable has been mapped.  what to do about any
- * unreachable hosts?  the sensible thing to do is to dump them on
- * stderr and be done with it.  unfortunately, there are hundreds of
- * such hosts in the usenet maps.  so we take the low road: for each
- * unreachable host, we add a back link from its cheapest mapped child,
- * in the faint that a reverse path works.
- *
- * beats me why people want their error output in their map databases.
- */
+//
+// everything reachable has been mapped.  what to do about any
+// unreachable hosts?  the sensible thing to do is to dump them on
+// stderr and be done with it.  unfortunately, there are hundreds of
+// such hosts in the usenet maps.  so we take the low road: for each
+// unreachable host, we add a back link from its cheapest mapped child,
+// in the faint that a reverse path works.
+//
+// beats me why people want their error output in their map databases.
+//
 static void
 backlinks(void)
 {
 	Link *l;
 	Node *n, *child;
-	Node *nomap;
-	long i;
 
 	// hosts from Hashpart to Tabsize are unreachable
-	for (i = Hashpart; i < Tabsize; i++) {
-		nomap = Table[i];
+	for (long i = Hashpart; i < Tabsize; i++) {
+		Node *nomap = Table[i];
 		// if a copy has been mapped, we're ok
 		if (nomap->copy != nomap) {
 			dehash(nomap);
-			Table[nomap->tloc] = 0;
+			Table[nomap->tloc] = NULL;
 			nomap->tloc = 0;
 			continue;
 		}
-
 		// TODO: simplify this
 		// add back link from minimal cost child
-		child = 0;
-		for (l = nomap->link; l; l = l->next) {
+		child = NULL;
+		for (l = nomap->link; l != NULL; l = l->next) {
 			n = l->to;
 			// never ever ever crawl out of a domain
 			if (ISADOMAIN(n))
 				continue;
-			if ((n = mappedcopy(n)) == 0)
+			if ((n = mappedcopy(n)) == NULL)
 				continue;
-			if (child == 0) {
+			if (child == NULL) {
 				child = n;
 				continue;
 			}
@@ -522,9 +503,9 @@ backlinks(void)
 			}
 			child = n;
 		}
-		if (child == 0)
+		if (child == NULL)
 			continue;
-		(void)dehash(nomap);
+		dehash(nomap);
 		l = addlink(child, nomap, INF, DEFNET, DEFDIR);	// INF cost
 		nomap->parent = child;
 		nomap->cost = costof(child, l);
@@ -548,13 +529,14 @@ mappedcopy(Node *n)
 	for (ncp = n->copy; ncp != n; ncp = ncp->copy)
 		if (ncp->flag & MAPPED)
 			return ncp;
+
 	return 0;
 }
 
-/*
- * l has just been added or changed in the heap,
- * so reset the state bits for l->to.
- */
+//
+// l has just been added or changed in the heap,
+// so reset the state bits for l->to.
+//
 static void
 setheapbits(Link *l)
 {
@@ -589,8 +571,8 @@ mtracereport(Node *from, Link *l, char *excuse)
 	trprint(stderr, from);
 	fputs(" -> ", stderr);
 	trprint(stderr, to);
-	fprintf(stderr, " (%ld, %ld, %ld) ", from->cost, l->cost,
-	    to->cost);
+	fprintf(stderr, " (%ld, %ld, %ld) ",
+	    from->cost, l->cost, to->cost);
 	if (to->parent) {
 		trprint(stderr, to->parent);
 		fprintf(stderr, " (%ld)", to->parent->cost);
@@ -601,7 +583,7 @@ mtracereport(Node *from, Link *l, char *excuse)
 static void
 otracereport(Node *n)
 {
-	if (n->parent)
+	if (n->parent != NULL)
 		trprint(stderr, n->parent);
 	else
 		fputs("[root]", stderr);

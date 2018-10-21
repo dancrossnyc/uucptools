@@ -1,6 +1,4 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stdio.h>
 #include <string.h>
@@ -17,57 +15,55 @@ static Link *lcopy(Node *parent, Node *n);
 
 static FILE *Gstream;		// for dumping graph
 
-/*
- * slide everything from Table[low] to Table[high]
- * up toward the high end.  make room!  make room!
- */
+//
+// slide everything from Table[low] to Table[high]
+// up toward the high end.  make room!  make room!
+//
 long
 pack(long low, long high)
 {
 	long hole, next;
 
-	// find first "hole "
-	for (hole = high; hole >= low && Table[hole] != 0; --hole);
+	// find first "hole"
+	for (hole = high; hole >= low && Table[hole] != NULL; --hole)
+		;
 
 	// repeatedly move next filled entry into last hole
 	for (next = hole - 1; next >= low; --next) {
-		if (Table[next] != 0) {
+		if (Table[next] != NULL) {
 			Table[hole] = Table[next];
 			Table[hole]->tloc = hole;
-			Table[next] = 0;
-			while (Table[--hole] != 0)	// find next hole
+			Table[next] = NULL;
+			while (Table[--hole] != NULL)	// find next hole
 				;
 		}
 	}
+
 	return hole + 1;
 }
 
 void
 resetnodes(void)
 {
-	long i;
 	Node *n;
+	int fmask =
+	    ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT | NTERMINAL);
 
-	for (i = Hashpart; i < Tabsize; i++)
+	for (size_t  i = Hashpart; i < Tabsize; i++)
 		if ((n = Table[i]) != 0) {
 			n->cost = (Cost) 0;
-			n->flag &=
-			    ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT
-			    | NTERMINAL);
+			n->flag &= fmask;
 			n->copy = n;
 		}
 
 	Home->cost = (Cost) 0;
-	Home->flag &=
-	    ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT | NTERMINAL);
+	Home->flag &= fmask;
 	Home->copy = Home;
 }
 
 void
 dumpgraph(void)
 {
-	long i;
-	Node *n;
 
 	if ((Gstream = fopen(Graphout, "w")) == NULL) {
 		fprintf(stderr, "%s: ", Argv[0]);
@@ -77,8 +73,8 @@ dumpgraph(void)
 
 	untangle();		// untangle net cycles for proper output
 
-	for (i = Hashpart; i < Tabsize; i++) {
-		n = Table[i];
+	for (long i = Hashpart; i < Tabsize; i++) {
+		Node *n = Table[i];
 		if (n == 0)
 			continue;	// impossible, but ...
 		// a minor optimization ...
@@ -96,9 +92,9 @@ dumpnode(Node *from)
 {
 	Node *to;
 	Link *l;
-	Link *lnet = 0, *ll, *lnext;
+	Link *lnet = NULL, *ll, *lnext;
 
-	for (l = from->link; l; l = l->next) {
+	for (l = from->link; l != NULL; l = l->next) {
 		to = l->to;
 		if (from == to)
 			continue;	// oops -- it's me!
@@ -107,23 +103,19 @@ dumpnode(Node *from)
 			// host -> host -- print host>host
 			if (l->cost == INF)
 				continue;	// phoney link
-			fputs(from->name, Gstream);
-			putc('>', Gstream);
-			fputs(to->name, Gstream);
-			putc('\n', Gstream);
+			fprintf(Gstream, "%s>%s\n", from->name, to->name);
 		} else {
-			/*
-			 * host -> net -- just cache it for now.
-			 * first check for dups.  (quadratic, but
-			 * n is small here.)
-			 */
+			//
+			// host -> net -- just cache it for now.
+			// first check for dups.  (quadratic, but
+			// n is small here.)
+			//
 			while (to->root && to != to->root)
 				to = to->root;
-			for (ll = lnet; ll; ll = ll->next)
-				if (strcmp(ll->to->name, to->name) ==
-				    0)
+			for (ll = lnet; ll != NULL; ll = ll->next)
+				if (strcmp(ll->to->name, to->name) == 0)
 					break;
-			if (ll)
+			if (ll != NULL)
 				continue;	// dup
 			ll = newlink();
 			ll->next = lnet;
@@ -133,32 +125,29 @@ dumpnode(Node *from)
 	}
 
 	// dump nets
-	if (lnet) {
+	if (lnet != NULL) {
 		// nets -- print host@\tnet,net, ...
-		fputs(from->name, Gstream);
-		putc('@', Gstream);
-		putc('\t', Gstream);
-		for (ll = lnet; ll; ll = lnext) {
+		fprintf(Gstream, "%s@\t", from->name);
+		for (ll = lnet; ll != NULL; ll = lnext) {
 			lnext = ll->next;
-			fputs(ll->to->name, Gstream);
-			if (lnext)
-				fputc(',', Gstream);
+			fprintf(Gstream, "%s%s", ll->to->name,
+			    (lnext != NULL) ? "," : "");
 			freelink(ll);
 		}
-		putc('\n', Gstream);
+		fprintf(Gstream, "\n");
 	}
 }
 
-/*
- * remove cycles in net definitions.
- *
- * depth-first search
- *
- * for each net, run dfs on its neighbors (nets only).  if we return to
- * a visited node, that's a net cycle.  mark the cycle with a pointer
- * in the root field (which gets us closer to the root of this
- * portion of the dfs tree).
- */
+//
+// remove cycles in net definitions.
+//
+// depth-first search
+//
+// for each net, run dfs on its neighbors (nets only).  if we return to
+// a visited node, that's a net cycle.  mark the cycle with a pointer
+// in the root field (which gets us closer to the root of this
+// portion of the dfs tree).
+//
 static void
 untangle(void)
 {
@@ -167,7 +156,7 @@ untangle(void)
 
 	for (i = Hashpart; i < Tabsize; i++) {
 		n = Table[i];
-		if (n == 0 || (n->flag & NNET) == 0 || n->root)
+		if (n == NULL || (n->flag & NNET) == 0 || n->root != NULL)
 			continue;
 		dfs(n);
 	}
@@ -181,7 +170,7 @@ dfs(Node *n)
 
 	n->flag |= INDFS;
 	n->root = n;
-	for (l = n->link; l; l = l->next) {
+	for (l = n->link; l != NULL; l = l->next) {
 		next = l->to;
 		if ((next->flag & NNET) == 0)
 			continue;
@@ -198,21 +187,17 @@ dfs(Node *n)
 void
 showlinks(void)
 {
-	Link *l;
-	Node *n;
-	long i;
 	FILE *estream;
 
-	if ((estream = fopen(Linkout, "w")) == 0)
+	estream = fopen(Linkout, "w");
+	if (estream == NULL)
 		return;
-
-	for (i = Hashpart; i < Tabsize; i++) {
-		n = Table[i];
+	for (long i = Hashpart; i < Tabsize; i++) {
+		Node *n = Table[i];
 		if (n == 0 || n->link == 0)
 			continue;
-		for (l = n->link; l; l = l->next) {
-			fputs(n->name, estream);
-			putc('\t', estream);
+		for (Link *l = n->link; l != NULL; l = l->next) {
+			fprintf(estream, "%s\t", n->name);
 			if (NETDIR(l) == LRIGHT)
 				putc(NETCHAR(l), estream);
 			fputs(l->to->name, estream);
@@ -221,14 +206,14 @@ showlinks(void)
 			fprintf(estream, "(%ld)\n", l->cost);
 		}
 	}
-	(void)fclose(estream);
+	fclose(estream);
 }
 
-/*
- * n is node in heap, newp is candidate for new parent.
- * choose between newp and n->parent for parent.
- * return 0 to use newp, non-zero o.w.
- */
+//
+// n is node in heap, newp is candidate for new parent.
+// choose between newp and n->parent for parent.
+// return 0 to use newp, non-zero o.w.
+//
 #define NEWP 0
 #define OLDP 1
 int
@@ -247,9 +232,9 @@ tiebreaker(Node *n, Node *newp)
 		return NEWP;
 
 	// look at real parents, not nets
-	while ((oldp->flag & NNET) && oldp->parent)
+	while ((oldp->flag & NNET) && oldp->parent != NULL)
 		oldp = oldp->parent;
-	while ((newp->flag & NNET) && newp->parent)
+	while ((newp->flag & NNET) && newp->parent != NULL)
 		newp = newp->parent;
 
 	// use fewer hops, if possible
@@ -259,15 +244,13 @@ tiebreaker(Node *n, Node *newp)
 	if (metric > 0)
 		return NEWP;
 
-	/*
-	 * compare names
-	 */
+	// compare names
 	opname = oldp->name;
 	npname = newp->name;
 	name = n->name;
 
 	// use longest common prefix with parent
-	while (*opname == *name && *npname == *name && *name) {
+	while (*opname == *name && *npname == *name && *name != '\0') {
 		opname++;
 		npname++;
 		name++;
@@ -288,27 +271,30 @@ tiebreaker(Node *n, Node *newp)
 	metric = strcmp(opname, npname);
 	if (metric < 0)
 		return NEWP;
+
 	return OLDP;
 }
 
 static int
 height(Node *n)
 {
-	int i = 0;
+	int i;
 
 	if (n == 0)
 		return 0;
-	while ((n = n->parent) != 0)
+	i = 0;
+	while ((n = n->parent) != NULL)
 		if (ISADOMAIN(n) || !(n->flag & NNET))
 			i++;
+
 	return i;
 }
 
-/*
- * return a copy of n ( == l->to).  we rely on n and its copy
- * pointing to the same name string, which is kludgey, but works
- * because the name is non-volatile.
- */
+//
+// return a copy of n ( == l->to).  we rely on n and its copy
+// pointing to the same name string, which is kludgey, but works
+// because the name is non-volatile.
+//
 
 #define REUSABLE(n, l)	(((n)->flag & NTERMINAL) == 0 \
 		      && ((n)->copy->flag & NTERMINAL) \
@@ -336,29 +322,29 @@ ncopy(Node *parent, Link *l)
 	n->copy = ncp;
 	ncp->link = lcopy(parent, n);
 	ncp->flag =
-	    (n->
-	    flag & ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT)) |
-	    NTERMINAL;
+	    (n->flag & ~(NALIAS | ATSIGN | MAPPED | HASLEFT | HASRIGHT)) |
+	        NTERMINAL;
 	return ncp;
 }
 
-/*
- * copy n's links but don't copy any terminal links
- * since n is itself at the end of a terminal link.
- *
- * this is a little messier than it should be, because
- * it wants to be recursive, but the recursion might be
- * very deep (for a long link list), so it iterates.
- *
- * why copy any links other than aliases?  hmmm ...
- */
+//
+// copy n's links but don't copy any terminal links
+// since n is itself at the end of a terminal link.
+//
+// this is a little messier than it should be, because
+// it wants to be recursive, but the recursion might be
+// very deep (for a long link list), so it iterates.
+//
+// why copy any links other than aliases?  hmmm ...
+//
 static Link *
 lcopy(Node *parent, Node *n)
 {
-	Link *l, *lcp;
-	Link *first = 0, *last = 0;
+	Link *first = NULL, *last = NULL;
 
-	for (l = n->link; l != 0; l = l->next) {
+	for (Link *l = n->link; l != NULL; l = l->next) {
+		Link *lcp;
+
 		// skip if dest is already mapped
 		if ((l->to->flag & MAPPED) != 0)
 			continue;
@@ -368,7 +354,14 @@ lcopy(Node *parent, Node *n)
 		// comment needed
 		if (ALTEREGO(l->to, parent))
 			continue;
+<<<<<<< HEAD
 		vprint(stderr, "\t-> %s\n", l->to->name);
+=======
+#ifdef DEBUG
+		if (Vflag > 1)
+			fprintf(stderr, "\t-> %s\n", l->to->name);
+#endif
+>>>>>>> b35f400... Comment, formatting, and NULL cleanups.
 		NumLcopy++;
 		lcp = newlink();
 		*lcp = *l;	// struct copy
@@ -376,14 +369,15 @@ lcopy(Node *parent, Node *n)
 		if (ISANET(n))
 			lcp->flag |= LTERMINAL;
 
-		if (first == 0) {
+		if (first == NULL) {
 			first = last = lcp;
 		} else {
 			last->next = lcp;
 			last = lcp;
 		}
 	}
-	if (last)
-		last->next = 0;
+	if (last != NULL)
+		last->next = NULL;
+
 	return first;
 }

@@ -1,6 +1,4 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stdlib.h>
 #include <string.h>
@@ -20,11 +18,11 @@ newlink(void)
 {
 	Link *rval;
 
-	if (Lcache) {
+	if (Lcache != NULL) {
 		rval = Lcache;
 		Lcache = Lcache->next;
 		memset(rval, 0, sizeof(Link));
-	} else if ((rval = (Link *) calloc(1, sizeof(Link))) == 0)
+	} else if ((rval = calloc(1, sizeof(Link))) == NULL)
 		nomem();
 	return rval;
 }
@@ -42,9 +40,10 @@ newnode(void)
 {
 	Node *rval;
 
-	if ((rval = (Node *) calloc(1, sizeof(Node))) == 0)
+	if ((rval = calloc(1, sizeof(Node))) == NULL)
 		nomem();
 	Ncount++;
+
 	return rval;
 }
 
@@ -53,7 +52,7 @@ newdom(void)
 {
 	Dom *rval;
 
-	if ((rval = (Dom *) calloc(1, sizeof(Dom))) == 0)
+	if ((rval = calloc(1, sizeof(Dom))) == NULL)
 		nomem();
 
 	return rval;
@@ -77,17 +76,16 @@ newtable(long size)
 {
 	Node **rval;
 
-	if ((rval =
-	    (Node **) calloc(1,
-	    size * sizeof(Node *))) == 0)
+	if ((rval = calloc(1, size * sizeof(Node *))) == NULL)
 		nomem();
+
 	return rval;
 }
 
 void
 freetable(Node **t, long size)
 {
-	free((char *)t);
+	free(t);
 }
 
 static void

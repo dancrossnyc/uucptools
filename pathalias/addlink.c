@@ -1,6 +1,4 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stdio.h>
 #include <string.h>
@@ -25,13 +23,13 @@ static int Tracecount;
 Link *
 addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 {
-	Link *l, *prev = 0;
+	Link *l, *prev = NULL;
 
 	LTRACE(from, to, cost, netchar, netdir, "");
-	/*
-	 * maintain uniqueness for dead links (only).
-	 */
-	for (l = from->link; l; l = l->next) {
+	//
+	// maintain uniqueness for dead links (only).
+	//
+	for (l = from->link; l != NULL; l = l->next) {
 		if (!DEADLINK(l))
 			break;
 		if (to == l->to) {
@@ -44,8 +42,6 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 		}
 		prev = l;
 	}
-
-
 	// allocate and link in the new link struct
 	l = newlink();
 	if (cost != INF)	// ignore back links
@@ -57,7 +53,6 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 		l->next = from->link;
 		from->link = l;
 	}
-
 	l->to = to;
 	// add penalty
 	if ((l->cost = cost + from->cost) < 0) {
@@ -69,7 +64,7 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 		    to->name);
 		yyerror(buf);
 	}
-	if (netchar == 0) {
+	if (netchar == '\0') {
 		netchar = DEFNET;
 		netdir = DEFDIR;
 	}
@@ -83,18 +78,17 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 void
 deadlink(Node *nleft, Node *nright)
 {
-	Link *l, *lhold = 0, *lprev, *lnext;
+	Link *l, *lhold = NULL, *lprev, *lnext;
 
 	// DEAD host
-	if (nright == 0) {
+	if (nright == NULL) {
 		nleft->flag |= NDEAD;	// DEAD host
 		return;
 	}
 
 	// DEAD link
-
 	// grab <nleft, nright> instances at head of nleft adjacency list
-	while ((l = nleft->link) != 0 && l->to == nright) {
+	while ((l = nleft->link) != NULL && l->to == nright) {
 		nleft->link = l->next;	// disconnect
 		l->next = lhold;	// terminate
 		lhold = l;	// add to lhold
@@ -112,7 +106,7 @@ deadlink(Node *nleft, Node *nright)
 	}
 
 	// check for emptiness
-	if (lhold == 0) {
+	if (lhold == NULL) {
 		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->flag |=
 		    LDEAD;
 		return;
@@ -144,15 +138,15 @@ tracelink(char *arg)
 	if (Tracecount >= NTRACE)
 		return -1;
 	l = newlink();
+	l->to = NULL;
 	bang = strchr(arg, '!');
 	if (bang) {
-		*bang = 0;
+		*bang = '\0';
 		l->to = addnode(bang + 1);
-	} else
-		l->to = 0;
-
+	}
 	l->from = addnode(arg);
 	Trace[Tracecount++] = l;
+
 	return 0;
 }
 
@@ -169,7 +163,7 @@ ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
 		// overkill, but you asked for it!
-		if (l->to == 0) {
+		if (l->to == NULL) {
 			if (EQ(from, l->from) || EQ(to, l->from))
 				break;
 		} else if (EQ(from, l->from) && EQ(to, l->to))
@@ -207,9 +201,7 @@ atrace(Node *n1, Node *n2)
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
-		if (l->to == 0
-		    && ((Node *) l->from == n1
-		    || (Node *) l->from == n2)) {
+		if (l->to == NULL && (l->from == n1 || l->from == n2)) {
 			snprintf(buf, sizeof buf, "%s = %s", n1->name, n2->name);
 			yyerror(buf);
 			return;
@@ -220,17 +212,16 @@ atrace(Node *n1, Node *n2)
 int
 maptrace(Node *from, Node *to)
 {
-	Link *l;
-	int i;
 
-	for (i = 0; i < Tracecount; i++) {
-		l = Trace[i];
-		if (l->to == 0) {
+	for (int i = 0; i < Tracecount; i++) {
+		Link *l = Trace[i];
+		if (l->to == NULL) {
 			if (EQ(from, l->from) || EQ(to, l->from))
 				return 1;
 		} else if (EQ(from, l->from) && EQ(to, l->to))
 			return 1;
 	}
+
 	return 0;
 }
 
@@ -242,7 +233,7 @@ deletelink(Node *from, Node *to)
 	l = from->link;
 
 	// delete all neighbors of from
-	if (to == 0) {
+	if (to == NULL) {
 		while (l) {
 			LTRACE(from, l->to, l->cost, NETCHAR(l),
 			    NETDIR(l), "DELETED");
@@ -250,7 +241,7 @@ deletelink(Node *from, Node *to)
 			freelink(l);
 			l = lnext;
 		}
-		from->link = 0;
+		from->link = NULL;
 		return;
 	}
 
@@ -264,7 +255,7 @@ deletelink(Node *from, Node *to)
 	}
 
 	// delete from interior of list
-	if (l == 0)
+	if (l == NULL)
 		return;
 	for (lnext = l->next; lnext; lnext = l->next) {
 		if (EQ(to, lnext->to)) {

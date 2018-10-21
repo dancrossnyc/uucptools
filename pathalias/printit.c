@@ -1,6 +1,4 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stddef.h>
 #include <stdio.h>
@@ -9,10 +7,10 @@
 #include "def.h"
 #include "fns.h"
 
-/*
- * print the routes by traversing the shortest path tree in preorder.
- * use lots of char bufs -- profiling indicates this costs about 5 kbytes
- */
+//
+// print the routes by traversing the shortest path tree in preorder.
+// use lots of char bufs -- profiling indicates this costs about 5 kbytes
+//
 
 // privates
 static void preorder(Link *l, char *ppath);
@@ -30,16 +28,14 @@ static Link *Ancestor;		// for -f option
 void
 printit(void)
 {
-	Link *l;
 	char pbuf[UUPATHSIZE];
 
 	// print home
 	if (Cflag)
 		printf("%ld\t", (long)Home->cost);
 	printf("%s\t%%s\n", Home->name);
-
 	memmove(pbuf, "%s", sizeof "%s");
-	for (l = Home->link; l; l = l->next) {
+	for (Link *l = Home->link; l != NULL; l = l->next) {
 		if (l->flag & LTREE) {
 			l->flag &= ~LTREE;
 			Ancestor = l;
@@ -51,9 +47,9 @@ printit(void)
 	fflush(stderr);
 }
 
-/*
- * preorder traversal of shortest path tree.
- */
+//
+// preorder traversal of shortest path tree.
+//
 static void
 preorder(Link *l, char *ppath)
 {
@@ -86,7 +82,7 @@ preorder(Link *l, char *ppath)
 	p_op = l->netop;
 
 	// recursion
-	for (l = n->link; l; l = l->next) {
+	for (l = n->link; l != NULL; l = l->next) {
 		if (!(l->flag & LTREE))
 			continue;
 		// network member inherits the routing syntax of its gateway
@@ -122,14 +118,14 @@ printable(Node *n)
 
 	// will a domain route suffice?
 	if (Dflag && !ISANET(n) && ISADOMAIN(n->parent)) {
-		/*
-		 * are there any interesting links?  a link
-		 * is interesting if it doesn't point back
-		 * to the parent, and is not an alias.
-		 */
+		//
+		// are there any interesting links?  a link
+		// is interesting if it doesn't point back
+		// to the parent, and is not an alias.
+		//
 
 		// check n
-		for (l = n->link; l; l = l->next) {
+		for (l = n->link; l != NULL; l = l->next) {
 			if (l->to == n->parent)
 				continue;
 			if (!(l->flag & LALIAS))
@@ -138,7 +134,7 @@ printable(Node *n)
 
 		// check copies of n
 		for (ncp = n->copy; ncp != n; ncp = ncp->copy) {
-			for (l = ncp->link; l; l = l->next) {
+			for (l = ncp->link; l != NULL; l = l->next) {
 				if (l->to == n->parent)
 					continue;
 				if (!(l->flag & LALIAS))
@@ -149,6 +145,7 @@ printable(Node *n)
 		// domain route suffices
 		return 0;
 	}
+
 	return 1;
 }
 
@@ -168,24 +165,24 @@ setpath(Link *l, char *ppath, char *npath, size_t nlen)
 	if (parent->flag & ATSIGN)
 		next->flag |= ATSIGN;
 
-	/*
-	 * i've noticed that distant gateways to domains frequently get
-	 * ...!gateway!user@dom.ain wrong.  ...!gateway!user%dom.ain
-	 * seems to work, so if next is a domain and the parent is
-	 * not the local host, force a magic %->@ conversion.  in this
-	 * context, "parent" is the nearest ancestor that is not a net.
-	 */
+	//
+	// i've noticed that distant gateways to domains frequently get
+	// ...!gateway!user@dom.ain wrong.  ...!gateway!user%dom.ain
+	// seems to work, so if next is a domain and the parent is
+	// not the local host, force a magic %->@ conversion.  in this
+	// context, "parent" is the nearest ancestor that is not a net.
+	//
 	while (ISANET(parent))
 		parent = parent->parent;
 	if (ISADOMAIN(next) && parent != Home)
 		next->flag |= ATSIGN;
 
-	/*
-	 * special handling for nets (including domains) and aliases.
-	 * part of the trick is to treat aliases to domains as 0 cost
-	 * links.  (the author believes they should be declared as such
-	 * in the input, but the world disagrees).
-	 */
+	//
+	// special handling for nets (including domains) and aliases.
+	// part of the trick is to treat aliases to domains as 0 cost
+	// links.  (the author believes they should be declared as such
+	// in the input, but the world disagrees).
+	//
 	if (ISANET(next) || ((l->flag & LALIAS) && !ISADOMAIN(parent))) {
 		hplen = strlen(ppath);
 		if (hplen >= nlen)
@@ -202,7 +199,7 @@ setpath(Link *l, char *ppath, char *npath, size_t nlen)
 	}
 
 	// remainder should be a sprintf -- foo on '%' as an operator
-	for (; nlen > 0 && (*npath = *ppath) != 0; ppath++) {
+	for (; nlen > 0 && (*npath = *ppath) != '\0'; ppath++) {
 		if (*ppath != '%') {
 			npath++;
 			nlen--;
@@ -323,13 +320,13 @@ printdomain(Node *n, char *path, Cost cost)
 		die("printdomain called twice");
 	n->flag |= PRINTED;
 
-	/*
-	 * print a route for dom.ain if it is a top-level domain, unless
-	 * it is private.
-	 *
-	 * print a route for sub.dom.ain only if all its ancestor dom.ains
-	 * are private and sub.dom.ain is not private.
-	 */
+	//
+	// print a route for dom.ain if it is a top-level domain, unless
+	// it is private.
+	//
+	// print a route for sub.dom.ain only if all its ancestor dom.ains
+	// are private and sub.dom.ain is not private.
+	//
 	if (!ISADOMAIN(n->parent)) {
 		// top-level domain
 		if (n->flag & ISPRIVATE) {

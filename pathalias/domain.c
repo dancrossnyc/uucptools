@@ -1,6 +1,5 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
+
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
@@ -15,9 +14,7 @@
 // privates
 static Dom *good, *bad;
 
-/*
- * good and bad are passed by reference for move-to-front
- */
+// good and bad are passed by reference for move-to-front
 int
 isadomain(char *domain)
 {
@@ -48,13 +45,14 @@ ondomlist(Dom **headp, char *domain)
 {
 	Dom *d, *head = *headp;
 
-	for (d = head; d != 0; d = d->next) {
+	for (d = head; d != NULL; d = d->next) {
 		if (strcmp(d->name, domain) == 0) {
 			if (d != head)
 				movetofront(headp, d);
 			return 1;
 		}
 	}
+
 	return 0;
 }
 
@@ -68,7 +66,7 @@ adddom(Dom **headp, char *domain)
 	d = newdom();
 	d->next = head;
 	d->name = strsave(domain);
-	if (d->next)
+	if (d->next != NULL)
 		d->next->prev = d;
 	*headp = d;
 }
@@ -78,11 +76,11 @@ movetofront(Dom **headp, Dom *d)
 {
 	Dom *head = *headp;
 
-	if (d->prev)
+	if (d->prev != NULL)
 		d->prev->next = d->next;
-	if (d->next)
+	if (d->next != NULL)
 		d->next->prev = d->prev;
-	if (head)
+	if (head != NULL)
 		head->prev = d;
 	d->next = head;
 	*headp = d;
@@ -92,11 +90,12 @@ int
 nslookup(char *domain)
 {
 	HEADER *hp;
-	int n;
+	size_t n;
 	unsigned char q[PACKETSZ], a[PACKETSZ];	// query, answer
 	char buf[PACKETSZ + 1];
 
-	if ((n = strlen(domain)) >= PACKETSZ)
+	n = strlen(domain);
+	if (n >= PACKETSZ)
 		return 0;
 	memmove(buf, domain, n);
 	if (buf[n - 1] != '.')

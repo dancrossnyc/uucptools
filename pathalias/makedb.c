@@ -42,14 +42,14 @@ main(int argc, char *argv[])
 		}
 
 
-	if ((ofptr = strrchr(Ofile, '/')) != 0)
+	if ((ofptr = strrchr(Ofile, '/')) != NULL)
 		ofptr++;
 	else
 		ofptr = Ofile;
 	if (strlen(ofptr) > 10) {
 		ofptr[10] = 0;
-		fprintf(stderr, "%s: using %s for dbm output\n", ProgName,
-		    Ofile);
+		fprintf(stderr, "%s: using %s for dbm output\n",
+		    ProgName, Ofile);
 	}
 
 	if (append == 0 && dbfile(Ofile) != 0) {
@@ -79,14 +79,15 @@ dbfile(char *dbf)
 int
 dbcreat(char *dbf, char *suffix)
 {
-	char buf[BUFSIZ];
+	char buf[512];
 	int fd;
 
-	(void)sprintf(buf, "%s.%s", dbf, suffix);
+	snprintf(buf, sizeof buf, "%s.%s", dbf, suffix);
 	if ((fd = creat(buf, 0666)) < 0)
 		return (-1);
-	(void)close(fd);
-	return (0);
+	close(fd);
+
+	return 0;
 }
 
 int
@@ -100,16 +101,16 @@ makedb(char *ifile)
 		return;
 	}
 
-	/*
-	 * keys and values are 0 terminated.  this wastes time and (disk) space,
-	 * but does lend simplicity and backwards compatibility.
-	 */
+	//
+	// keys and values are 0 terminated.  this wastes time and (disk) space,
+	// but does lend simplicity and backwards compatibility.
+	//
 	key.dptr = line;
 	while (fgets(line, sizeof(line), stdin) != NULL) {
 		char *op, *end;
 
 		end = line + strlen(line);
-		end[-1] = 0;	// kill newline, stuff null terminator
+		end[-1] = '\0';	// kill newline, stuff null terminator
 		op = strchr(line, '\t');
 		if (op != NULL) {
 			*op++ = 0;

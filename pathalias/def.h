@@ -71,9 +71,9 @@ struct Node {
 #define	INF	((Cost)100 * MILLION)	// infinitely expensive link
 #define DEFPENALTY ((Cost) 200)	// default avoidance cost
 
-/*
- * data structure for adjacency list representation
- */
+//
+// data structure for adjacency list representation
+//
 
 // flags for l_dir
 #define NETDIR(l)	((l)->flag & LDIR)
@@ -87,9 +87,9 @@ struct Node {
 #define LGATEWAY  0x0080	// this link is a gateway
 #define LTERMINAL 0x0100	// this link is terminal
 
-/*
- * Link structure.
- */
+//
+// Link structure.
+//
 struct Link {
 	Node *to;		// adjacent node
 	Cost cost;		// edge cost
@@ -99,9 +99,9 @@ struct Link {
 	char netop;		// network operator
 };
 
-/*
- * Doubly linked list for known and unknown domains.
- */
+//
+// Doubly linked list for known and unknown domains.
+//
 struct Dom {
 	Dom *next;
 	Dom *prev;

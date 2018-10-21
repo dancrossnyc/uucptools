@@ -240,20 +240,20 @@ yyerror(char *s)
 	fprintf(stderr, "line %d: %s\n", Lineno, s);
 }
 
-/*
- * patch in the costs of getting on/off the network.
- *
- * for each network member on netlist, add links:
- *	network -> member	cost = 0;
- *	member -> network	cost = parameter.
- *
- * if network and member both require gateways, assume network
- * is a gateway to member (but not v.v., to avoid such travesties
- * as topaz!seismo.css.gov.edu.rutgers).
- *
- * note that members can have varying costs to a network, by suitable
- * multiple declarations.  this is a feechur, albeit a useless one.
- */
+//
+// patch in the costs of getting on/off the network.
+//
+// for each network member on netlist, add links:
+//	network -> member	cost = 0;
+//	member -> network	cost = parameter.
+//
+// if network and member both require gateways, assume network
+// is a gateway to member (but not v.v., to avoid such travesties
+// as topaz!seismo.css.gov.edu.rutgers).
+//
+// note that members can have varying costs to a network, by suitable
+// multiple declarations.  this is a feechur, albeit a useless one.
+//
 static void
 fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 {
@@ -262,15 +262,14 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 	static int netanon = 0;
 	char anon[25];
 
-	if (network == 0) {
+	if (network == NULL) {
 		snprintf(anon, sizeof anon, "[unnamed net %d]", netanon++);
 		network = addnode(anon);
 	}
 	network->flag |= NNET;
 
 	// insert the links
-	for (member = nlist ; member; member = nextnet) {
-
+	for (member = nlist; member != NULL; member = nextnet) {
 		// network -> member, cost is 0
 		l = addlink(network, member, (Cost) 0, netchar, netdir);
 		if (GATEWAYED(network) && GATEWAYED(member))
@@ -279,7 +278,7 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 		// member -> network, cost is parameter
 		// never ever ever crawl up from a domain
 		if (!ISADOMAIN(network))
-			(void) addlink(member, network, cost, netchar, netdir);
+			addlink(member, network, cost, netchar, netdir);
 
 		nextnet = member->net;
 		member->net = 0;	// clear for later use
@@ -287,7 +286,6 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 }
 
 // scanner
-
 #define QUOTE '"'
 #define STR_EQ(s1, s2) (s1[2] == s2[2] && strcmp(s1, s2) == 0)
 #define NLRETURN() {Scanstate = NEWLINE; return EOL;}
@@ -297,23 +295,23 @@ static struct ctable {
 	Cost cval;
 } ctable[] = {
 	// ordered by frequency of appearance in a "typical" dataset
-	{"DIRECT", 200},
-	{"DEMAND", 300},
-	{"DAILY", 5000},
-	{"HOURLY", 500},
-	{"DEDICATED", 100},
-	{"EVENING", 2000},
-	{"LOCAL", 25},
-	{"LOW", 5},	// baud rate, quality penalty
-	{"DEAD", MILLION},
-	{"POLLED", 5000},
-	{"WEEKLY", 30000},
-	{"HIGH", -5},	// baud rate, quality bonus
-	{"FAST", -80},	// high speed (>= 9.6 kbps) modem
+	{"DIRECT",	200},
+	{"DEMAND",	300},
+	{"DAILY",	5000},
+	{"HOURLY",	500},
+	{"DEDICATED",	100},
+	{"EVENING",	2000},
+	{"LOCAL",	25},
+	{"LOW",		5},	// baud rate, quality penalty
+	{"DEAD",	MILLION},
+	{"POLLED",	5000},
+	{"WEEKLY",	30000},
+	{"HIGH",	-5},	// baud rate, quality bonus
+	{"FAST",	-80},	// high speed (>= 9.6 kbps) modem
 	// deprecated
-	{"ARPA", 100},
-	{"DIALED", 300},
-	{0, 0}
+	{"ARPA",	100},
+	{"DIALED",	300},
+	{NULL,		0}
 };
 
 static int
@@ -366,7 +364,7 @@ continuation:
 		}
 
 		if (getword(buf, c) == 0) {
-			for (ct = ctable; ct->cname; ct++)
+			for (ct = ctable; ct->cname != NULL; ct++)
 				if (STR_EQ(buf, ct->cname)) {
 					yylval.y_cost = ct->cval;
 					return COST;
@@ -441,10 +439,10 @@ continuation:
 	return c;
 }
 
-/*
- * fill str with the next word in [0-9A-Za-z][-._0-9A-Za-z]+ or a quoted
- * string that contains no newline.  return -1 on failure or EOF, 0 o.w.
- */
+//
+// fill str with the next word in [0-9A-Za-z][-._0-9A-Za-z]+ or a quoted
+// string that contains no newline.  return -1 on failure or EOF, 0 o.w.
+//
 static int
 getword(char *str, int c)
 {
@@ -480,6 +478,7 @@ yymore:
 
 	ungetc(c, stdin);
 	*str = 0;
+
 	return 0;
 }
 
@@ -497,6 +496,7 @@ yywrap()
 	}
 	if (freopen("/dev/null", "r", stdin) == NULL)
 		die("freopen /dev/null to stdin failed");
+
 	return -1;
 }
 
@@ -508,7 +508,7 @@ adjust(Node *n, Cost cost)
 	n->cost += cost;	// cumulative
 
 	// hit existing links
-	for (l = n->link; l; l = l->next) {
+	for (l = n->link; l != NULL; l = l->next) {
 		if ((l->cost += cost) < 0) {
 			char buf[100];
 

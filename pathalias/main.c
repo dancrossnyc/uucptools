@@ -1,6 +1,4 @@
-/*
- * pathalias -- by steve bellovin, as told to peter honeyman
- */
+// pathalias -- by steve bellovin, as told to peter honeyman
 
 #include <stdio.h>
 #include <string.h>
@@ -36,7 +34,7 @@ main(int argc, char *argv[])
 	int c;
 	int errflg = 0;
 
-	setbuf(stderr, (char *)0);
+	setbuf(stderr, NULL);
 	Cfile = "[deadlinks]";	// for tracing dead links
 	Argv = argv;
 	Argc = argc;
@@ -51,7 +49,7 @@ main(int argc, char *argv[])
 				*bang++ = 0;
 				deadlink(addnode(optarg), addnode(bang));
 			} else
-				deadlink(addnode(optarg), (Node *) 0);
+				deadlink(addnode(optarg), NULL);
 			break;
 		case 'D':	// penalize routes beyond domains
 			Dflag++;
@@ -80,7 +78,7 @@ main(int argc, char *argv[])
 				fprintf(stderr,
 				    "%s: can trace only %d links\n",
 				    Argv[0], NTRACE);
-				exit(ERROR);
+				exit(EXIT_FAILURE);
 			}
 			Tflag = 1;
 			break;
@@ -93,19 +91,19 @@ main(int argc, char *argv[])
 
 	if (errflg) {
 		fprintf(stderr, USAGE, Argv[0]);
-		exit(ERROR);
+		exit(EXIT_FAILURE);
 	}
 	argv += optind;		// kludge for yywrap()
 
-	if (*argv) {
-		if (freopen(NULL_DEVICE, "r", stdin) == NULL)
+	if (*argv != NULL) {
+		if (freopen("/dev/null", "r", stdin) == NULL)
 			die("cannot reopen stdin");
 	} else
 		Cfile = "[stdin]";
 
 	if (!locname)
 		locname = local();
-	if (*locname == 0) {
+	if (*locname == '\0') {
 		locname = "lostinspace";
 		fprintf(stderr, "%s: using \"%s\" for local name\n",
 		    Argv[0], locname);
@@ -114,7 +112,7 @@ main(int argc, char *argv[])
 	Home = addnode(locname);	// add home node
 	Home->cost = 0;	// doesn't cost to get here
 
-	(void)yyparse();	// read in link info
+	yyparse();		// read in link info
 
 	vprint(stderr, "%ld nodes, %ld links\n", Ncount, Lcount);
 
@@ -134,5 +132,5 @@ void
 die(char *s)
 {
 	fprintf(stderr, "%s: %s; notify the authorities\n", Argv[0], s);
-	exit(SEVERE_ERROR);
+	exit(EXIT_FAILURE);
 }
