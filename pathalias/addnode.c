@@ -192,9 +192,9 @@ hash(char *name, int unique)
 		if (EQ(n, name) && !(n->flag & ISPRIVATE) && !unique)
 			return probe;	/* this is it! */
 
-		probe -= hash2;	/* double hashing */
-		if (probe < 0)
+		while (probe < hash2)
 			probe += Tabsize;
+		probe -= hash2;	/* double hashing */
 	}
 
 	return probe;		/* brand new */

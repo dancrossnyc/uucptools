@@ -13,13 +13,21 @@
 # GETOPT = getopt.o
 ###
 # internet domain name resolver library
-# enable RESOLVER in config.h
+# Linux and macOS both want:
 # RESOLVER = -lresolv
+###
+# if your system is weird
+#
+# macOS wants this:
+# PCFLAGS = -DBIND_8_COMPAT
+#
+# Linux wants this:
+# PCFLAGS = -D_BSD_SOURCE -D_XOPEN_SOURCE
 ### end of configuration section 
 
 
 CC = cc
-CFLAGS = -Wall -Werror -ansi -pedantic -std=c99 -O
+CFLAGS = -Wall -Werror -ansi -pedantic -std=c99 $(PCFLAGS) -O
 LDFLAGS = -s $(GETOPT) $(DBM) $(RESOLVER)
 YFLAGS = -d
 
