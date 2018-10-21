@@ -1,15 +1,17 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)mapit.c	9.16 92/08/25";
-#endif
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
+
+#include <stdio.h>
 
 #include "def.h"
+#include "fns.h"
 
 #define chkheap(i)		/* void */
 #define chkgap()		/* int */
 
 #define trprint(stream, n) \
-	fprintf((stream), (n)->n_flag & NTERMINAL ? "<%s>" : "%s", (n)->n_name)
+	fprintf((stream), (n)->flag & NTERMINAL ? "<%s>" : "%s", (n)->name)
 
 /* exports */
 /* invariant while mapping: Nheap < Hashpart */
@@ -57,7 +59,7 @@ mapit(void)
 
 	/* insert Home to get things started */
 	l = newlink();		/* link to get things started */
-	l->l_to = Home;
+	l->to = Home;
 	(void)dehash(Home);
 	insert(l);
 
@@ -65,21 +67,20 @@ mapit(void)
 	do {
 		Heaphighwater = Nheap;
 		while ((l = min_node()) != 0) {
-			l->l_flag |= LTREE;
-			n = l->l_to;
-			if (n->n_flag & MAPPED)	/* sanity check */
+			l->flag |= LTREE;
+			n = l->to;
+			if (n->flag & MAPPED)	/* sanity check */
 				die("mapped node in heap");
 			if (Tflag && maptrace(n, n))
 				otracereport(n);	/* tracing */
 			chkheap(1);
 			chkgap();	/* debugging */
-			n->n_flag |= MAPPED;
+			n->flag |= MAPPED;
 			heapchildren(n);	/* add children to heap */
 		}
 		vprint(stderr,
-		    "heap hiwat %d\nalloc %ldk, ncopy = %ld, nlink = %ld, lcopy = %ld\n",
-		    Heaphighwater, allocation(), NumNcopy, Nlink,
-		    NumLcopy);
+		    "heap hiwat %ld\nncopy = %ld, nlink = %ld, lcopy = %ld\n",
+		    Heaphighwater, NumNcopy, Nlink, NumLcopy);
 
 		if (Nheap != 0)	/* sanity check */
 			die("null entry in heap");
@@ -97,7 +98,7 @@ mapit(void)
 		int foundone = 0;
 
 		for (; Hashpart < Tabsize; Hashpart++) {
-			if (Table[Hashpart]->n_flag & ISPRIVATE)
+			if (Table[Hashpart]->flag & ISPRIVATE)
 				continue;
 			if (foundone++ == 0)
 				fputs("You can't get there from here:\n",
@@ -117,24 +118,25 @@ heapchildren(Node *n)
 	int mtrace;
 	Cost cost;
 
-	for (l = n->n_link; l; l = l->l_next) {
+	for (l = n->link; l; l = l->next) {
 
-		next = l->l_to;	/* neighboring node */
+		next = l->to;	/* neighboring node */
 		mtrace = Tflag && maptrace(n, next);
 
-		if (l->l_flag & LTREE)
+		if (l->flag & LTREE)
 			continue;
 
-		if (l->l_flag & LTERMINAL)
-			l->l_to = next = ncopy(n, l);
+		if (l->flag & LTERMINAL)
+			l->to = next = ncopy(n, l);
 
-		if ((n->n_flag & NTERMINAL) && (l->l_flag & LALIAS))
+		if ((n->flag & NTERMINAL) && (l->flag & LALIAS)) {
 			if (skipterminalalias(n, next))
 				continue;
 			else
-				l->l_to = next = ncopy(n, l);
+				l->to = next = ncopy(n, l);
+		}
 
-		if (next->n_flag & MAPPED) {
+		if (next->flag & MAPPED) {
 			if (mtrace)
 				mtracereport(n, l, "-\talready mapped");
 			continue;
@@ -149,25 +151,25 @@ heapchildren(Node *n)
 		 * heap property.
 		 */
 		if (mtrace) {
-			if (next->n_parent)
-				mtracereport(next->n_parent, l, "*\tdrop");
+			if (next->parent)
+				mtracereport(next->parent, l, "*\tdrop");
 			mtracereport(n, l, "+\tadd");
 		}
-		next->n_parent = n;
+		next->parent = n;
 		if (dehash(next) == 0) {	/* first time */
-			next->n_cost = cost;
+			next->cost = cost;
 			insert(l);	/* insert at end */
 			heapup(l);
 		} else {
 			/* replace inferior path */
-			Heap[next->n_tloc] = l;
-			if (cost > next->n_cost) {
+			Heap[next->tloc] = l;
+			if (cost > next->cost) {
 				/* increase cost (gateway) */
-				next->n_cost = cost;
+				next->cost = cost;
 				heapdown(l);
-			} else if (cost < next->n_cost) {
+			} else if (cost < next->cost) {
 				/* cheaper route */
-				next->n_cost = cost;
+				next->cost = cost;
 
 				heapup(l);
 			}
@@ -187,8 +189,8 @@ static int
 skipterminalalias(Node *n, Node *next)
 {
 
-	while (n->n_flag & NALIAS) {
-		n = n->n_parent;
+	while (n->flag & NALIAS) {
+		n = n->parent;
 		if (ALTEREGO(n, next))
 			return 1;
 	}
@@ -212,36 +214,36 @@ skiplink(
 	Node *n;	/* this node */
 	Link *lheap;	/* old link to this node */
 
-	n = l->l_to;
+	n = l->to;
 
 	/* first time we've reached this node? */
-	if (n->n_tloc >= Hashpart)
+	if (n->tloc >= Hashpart)
 		return 0;
 
-	lheap = Heap[n->n_tloc];
+	lheap = Heap[n->tloc];
 
 	/* examine links to nets that require gateways */
 	if (GATEWAYED(n)) {
 		/* if exactly one is a gateway, use it */
-		if ((lheap->l_flag & LGATEWAY) && !(l->l_flag & LGATEWAY)) {
+		if ((lheap->flag & LGATEWAY) && !(l->flag & LGATEWAY)) {
 			if (trace)
 				mtracereport(parent, l, "-\told gateway");
 			return 1;	/* old is gateway */
 		}
-		if (!(lheap->l_flag & LGATEWAY) && (l->l_flag & LGATEWAY))
+		if (!(lheap->flag & LGATEWAY) && (l->flag & LGATEWAY))
 			return 0;	/* new is gateway */
 
 		/* no gateway or both gateways;  resolve in standard way ... */
 	}
 
 	/* examine dup link (sanity check) */
-	if (n->n_parent == parent && (DEADLINK(lheap) || DEADLINK(l)))
+	if (n->parent == parent && (DEADLINK(lheap) || DEADLINK(l)))
 		die("dup dead link");
 
 	/*  examine cost */
-	if (cost < n->n_cost)
+	if (cost < n->cost)
 		return 0;
-	if (cost > n->n_cost) {
+	if (cost > n->cost) {
 		if (trace)
 			mtracereport(parent, l, "-\tcheaper");
 		return 1;
@@ -256,18 +258,18 @@ skiplink(
 	return 0;
 }
 
-/* compute cost to next (l->l_to) via prev */
+/* compute cost to next (l->to) via prev */
 static Cost
 costof(Node *prev, Link *l)
 {
 	Node *next;
 	Cost cost;
 
-	if (l->l_flag & LALIAS)
-		return prev->n_cost;	/* by definition */
+	if (l->flag & LALIAS)
+		return prev->cost;	/* by definition */
 
-	next = l->l_to;
-	cost = prev->n_cost + l->l_cost;	/* basic cost */
+	next = l->to;
+	cost = prev->cost + l->cost;	/* basic cost */
 	if (cost >= INF)
 		return cost + 1;
 
@@ -285,11 +287,11 @@ costof(Node *prev, Link *l)
 		cost += INF;	/* dead link */
 	else if (DEADHOST(prev))
 		cost += INF;	/* dead parent */
-	else if (GATEWAYED(next) && !(l->l_flag & LGATEWAY))
+	else if (GATEWAYED(next) && !(l->flag & LGATEWAY))
 		cost += INF;	/* not gateway */
 	else if (!ISANET(prev)) {
-		if ((NETDIR(l) == LLEFT && (prev->n_flag & HASRIGHT))
-		    || (NETDIR(l) == LRIGHT && (prev->n_flag & HASLEFT)))
+		if ((NETDIR(l) == LLEFT && (prev->flag & HASRIGHT))
+		    || (NETDIR(l) == LRIGHT && (prev->flag & HASLEFT)))
 			cost += INF;	/* mixed syntax */
 	}
 
@@ -302,16 +304,16 @@ insert(Link *l)
 {
 	Node *n;
 
-	n = l->l_to;
-	if (n->n_flag & MAPPED)
+	n = l->to;
+	if (n->flag & MAPPED)
 		die("insert mapped node");
 
-	Heap[n->n_tloc] = 0;
+	Heap[n->tloc] = 0;
 	if (Heap[Nheap + 1] != 0)
 		die("heap error in insert");
 	if (Nheap++ == 0) {
 		Heap[1] = l;
-		n->n_tloc = 1;
+		n->tloc = 1;
 		return;
 	}
 	if (Vflag && Nheap > Heaphighwater)
@@ -319,7 +321,7 @@ insert(Link *l)
 
 	/* insert at the end.  caller must heapup(l). */
 	Heap[Nheap] = l;
-	n->n_tloc = Nheap;
+	n->tloc = Nheap;
 }
 
 /*
@@ -337,19 +339,19 @@ heapup(Link *l)
 	Cost cost;
 	Node *child, *parent;
 
-	child = l->l_to;
+	child = l->to;
 
-	cost = child->n_cost;
-	for (cindx = child->n_tloc; cindx > 1; cindx = pindx) {
+	cost = child->cost;
+	for (cindx = child->tloc; cindx > 1; cindx = pindx) {
 		pindx = cindx / 2;
 		if (Heap[pindx] == 0)	/* sanity check */
 			die("impossible error in heapup");
-		parent = Heap[pindx]->l_to;
-		if (cost > parent->n_cost)
+		parent = Heap[pindx]->to;
+		if (cost > parent->cost)
 			return;
 
 		/* net/domain heuristic */
-		if (cost == parent->n_cost) {
+		if (cost == parent->cost) {
 			if (!ISANET(child))
 				return;
 			if (!ISADOMAIN(parent))
@@ -381,7 +383,7 @@ min_node(void)
 
 	if (--Nheap) {
 		rheap[1] = lastlink;
-		lastlink->l_to->n_tloc = 1;
+		lastlink->to->tloc = 1;
 		heapdown(lastlink);	/* restore heap property */
 	}
 
@@ -402,22 +404,22 @@ heapdown(Link *l)
 	Link **rheap = Heap;	/* in register -- heavily used */
 	Node *child, *rchild, *parent;
 
-	pindx = l->l_to->n_tloc;
-	parent = rheap[pindx]->l_to;	/* invariant */
+	pindx = l->to->tloc;
+	parent = rheap[pindx]->to;	/* invariant */
 	for (; (cindx = pindx * 2) <= Nheap; pindx = cindx) {
 		/* pick lhs or rhs child */
-		child = rheap[cindx]->l_to;
+		child = rheap[cindx]->to;
 		if (cindx < Nheap) {
 			/* compare with rhs child */
-			rchild = rheap[cindx + 1]->l_to;
+			rchild = rheap[cindx + 1]->to;
 			/*
 			 * use rhs child if smaller than lhs child.
 			 * if equal, use rhs if net or domain.
 			 */
-			if (child->n_cost > rchild->n_cost) {
+			if (child->cost > rchild->cost) {
 				child = rchild;
 				cindx++;
-			} else if (child->n_cost == rchild->n_cost)
+			} else if (child->cost == rchild->cost)
 				if (ISANET(rchild)) {
 					child = rchild;
 					cindx++;
@@ -425,7 +427,7 @@ heapdown(Link *l)
 		}
 
 		/* child is the candidate for swapping */
-		if (parent->n_cost < child->n_cost)
+		if (parent->cost < child->cost)
 			break;
 
 		/*
@@ -433,7 +435,7 @@ heapdown(Link *l)
 		 *      move nets/domains up
 		 *      move nets above domains
 		 */
-		if (parent->n_cost == child->n_cost) {
+		if (parent->cost == child->cost) {
 			if (!ISANET(child))
 				break;
 			if (ISANET(parent) && ISADOMAIN(child))
@@ -454,23 +456,23 @@ heapswap(long i, long j)
 	temp = rheap[i];
 	rheap[i] = rheap[j];
 	rheap[j] = temp;
-	rheap[j]->l_to->n_tloc = j;
-	rheap[i]->l_to->n_tloc = i;
+	rheap[j]->to->tloc = j;
+	rheap[i]->to->tloc = i;
 }
 
-/* return 1 if n is already de-hashed (n_tloc < Hashpart), 0 o.w. */
+/* return 1 if n is already de-hashed (tloc < Hashpart), 0 o.w. */
 static int
 dehash(Node *n)
 {
-	if (n->n_tloc < Hashpart)
+	if (n->tloc < Hashpart)
 		return 1;
 
 	/* swap with entry in Table[Hashpart] */
-	Table[Hashpart]->n_tloc = n->n_tloc;
-	Table[n->n_tloc] = Table[Hashpart];
+	Table[Hashpart]->tloc = n->tloc;
+	Table[n->tloc] = Table[Hashpart];
 	Table[Hashpart] = n;
 
-	n->n_tloc = Hashpart++;
+	n->tloc = Hashpart++;
 	return 0;
 }
 
@@ -496,18 +498,18 @@ backlinks(void)
 	for (i = Hashpart; i < Tabsize; i++) {
 		nomap = Table[i];
 		/* if a copy has been mapped, we're ok */
-		if (nomap->n_copy != nomap) {
+		if (nomap->copy != nomap) {
 			dehash(nomap);
-			Table[nomap->n_tloc] = 0;
-			nomap->n_tloc = 0;
+			Table[nomap->tloc] = 0;
+			nomap->tloc = 0;
 			continue;
 		}
 
 		/* TODO: simplify this */
 		/* add back link from minimal cost child */
 		child = 0;
-		for (l = nomap->n_link; l; l = l->l_next) {
-			n = l->l_to;
+		for (l = nomap->link; l; l = l->next) {
+			n = l->to;
 			/* never ever ever crawl out of a domain */
 			if (ISADOMAIN(n))
 				continue;
@@ -517,10 +519,10 @@ backlinks(void)
 				child = n;
 				continue;
 			}
-			if (n->n_cost > child->n_cost)
+			if (n->cost > child->cost)
 				continue;
-			if (n->n_cost == child->n_cost) {
-				nomap->n_parent = child;	/* for tiebreaker */
+			if (n->cost == child->cost) {
+				nomap->parent = child;	/* for tiebreaker */
 				if (tiebreaker(nomap, n))
 					continue;
 			}
@@ -530,13 +532,13 @@ backlinks(void)
 			continue;
 		(void)dehash(nomap);
 		l = addlink(child, nomap, INF, DEFNET, DEFDIR);	/* INF cost */
-		nomap->n_parent = child;
-		nomap->n_cost = costof(child, l);
+		nomap->parent = child;
+		nomap->cost = costof(child, l);
 		insert(l);
 		heapup(l);
 		if (Vflag > 1)
 			fprintf(stderr, "backlink: %s <- %s\n",
-			    nomap->n_name, child->n_name);
+			    nomap->name, child->name);
 	}
 	vprint(stderr, "%d backlinks\n", Nheap);
 }
@@ -547,17 +549,17 @@ mappedcopy(Node *n)
 {
 	Node *ncp;
 
-	if (n->n_flag & MAPPED)
+	if (n->flag & MAPPED)
 		return n;
-	for (ncp = n->n_copy; ncp != n; ncp = ncp->n_copy)
-		if (ncp->n_flag & MAPPED)
+	for (ncp = n->copy; ncp != n; ncp = ncp->copy)
+		if (ncp->flag & MAPPED)
 			return ncp;
 	return 0;
 }
 
 /*
  * l has just been added or changed in the heap,
- * so reset the state bits for l->l_to.
+ * so reset the state bits for l->to.
  */
 static void
 setheapbits(Link *l)
@@ -565,39 +567,39 @@ setheapbits(Link *l)
 	Node *n;
 	Node *parent;
 
-	n = l->l_to;
-	parent = n->n_parent;
-	n->n_flag &= ~(NALIAS | HASLEFT | HASRIGHT);	/* reset */
+	n = l->to;
+	parent = n->parent;
+	n->flag &= ~(NALIAS | HASLEFT | HASRIGHT);	/* reset */
 
 	/* record whether link is an alias */
-	if (l->l_flag & LALIAS) {
-		n->n_flag |= NALIAS;
+	if (l->flag & LALIAS) {
+		n->flag |= NALIAS;
 		/* TERMINALity is inherited by the alias */
-		if (parent->n_flag & NTERMINAL)
-			n->n_flag |= NTERMINAL;
+		if (parent->flag & NTERMINAL)
+			n->flag |= NTERMINAL;
 	}
 
 	/* set left/right bits */
-	if (NETDIR(l) == LLEFT || (parent->n_flag & HASLEFT))
-		n->n_flag |= HASLEFT;
-	if (NETDIR(l) == LRIGHT || (parent->n_flag & HASRIGHT))
-		n->n_flag |= HASRIGHT;
+	if (NETDIR(l) == LLEFT || (parent->flag & HASLEFT))
+		n->flag |= HASLEFT;
+	if (NETDIR(l) == LRIGHT || (parent->flag & HASRIGHT))
+		n->flag |= HASRIGHT;
 }
 
 static void
 mtracereport(Node *from, Link *l, char *excuse)
 {
-	Node *to = l->l_to;
+	Node *to = l->to;
 
 	fprintf(stderr, "%-16s ", excuse);
 	trprint(stderr, from);
 	fputs(" -> ", stderr);
 	trprint(stderr, to);
-	fprintf(stderr, " (%ld, %ld, %ld) ", from->n_cost, l->l_cost,
-	    to->n_cost);
-	if (to->n_parent) {
-		trprint(stderr, to->n_parent);
-		fprintf(stderr, " (%ld)", to->n_parent->n_cost);
+	fprintf(stderr, " (%ld, %ld, %ld) ", from->cost, l->cost,
+	    to->cost);
+	if (to->parent) {
+		trprint(stderr, to->parent);
+		fprintf(stderr, " (%ld)", to->parent->cost);
 	}
 	putc('\n', stderr);
 }
@@ -605,8 +607,8 @@ mtracereport(Node *from, Link *l, char *excuse)
 static void
 otracereport(Node *n)
 {
-	if (n->n_parent)
-		trprint(stderr, n->n_parent);
+	if (n->parent)
+		trprint(stderr, n->parent);
 	else
 		fputs("[root]", stderr);
 	fputs(" -> ", stderr);

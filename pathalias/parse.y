@@ -1,8 +1,10 @@
 %{
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char	*sccsid = "@(#)parse.y	9.11 91/06/01";
-#endif /* lint */
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "def.h"
 #include "fns.h"
@@ -81,18 +83,18 @@ links	: host site cost {
 
 		l = addlink($1, $2.ys_node, $3, $2.ys_net, $2.ys_dir);
 		if (GATEWAYED($2.ys_node))
-			l->l_flag |= LGATEWAY;
+			l->flag |= LGATEWAY;
 		if ($2.ys_flag & TERMINAL)
-			l->l_flag |= LTERMINAL;
+			l->flag |= LTERMINAL;
 	  }			
 	| links ',' site cost {
 		Link *l;
 
 		l = addlink($1, $3.ys_node, $4, $3.ys_net, $3.ys_dir);
 		if (GATEWAYED($3.ys_node))
-			l->l_flag |= LGATEWAY;
+			l->flag |= LGATEWAY;
 		if ($3.ys_flag & TERMINAL)
-			l->l_flag |= LTERMINAL;
+			l->flag |= LTERMINAL;
 	  }
 	| links ','	/* benign error */
 	;
@@ -152,8 +154,8 @@ nlist	: SITE		{$$ = addnode($1);}
 		Node *n;
 
 		n = addnode($3);
-		if (n->n_net == 0) {
-			n->n_net = $1;
+		if (n->net == 0) {
+			n->net = $1;
 			$$ = n;
 		}
 	  }
@@ -164,8 +166,8 @@ private	: PRIVATE '{' plist '}'			/* list of privates */
 	| PRIVATE '{' '}'	{fixprivate();}	/* end scope of privates */
 	;
 
-plist	: SITE			{addprivate($1)->n_flag |= ISPRIVATE;}
-	| plist ',' SITE	{addprivate($3)->n_flag |= ISPRIVATE;}
+plist	: SITE			{addprivate($1)->flag |= ISPRIVATE;}
+	| plist ',' SITE	{addprivate($3)->flag |= ISPRIVATE;}
 	| plist ','		/* benign error */
 	;
 
@@ -194,10 +196,10 @@ delelem	: SITE {
 
 		n = addnode($1);
 		deletelink(n, (Node *) 0);
-		n->n_flag |= ISPRIVATE;
+		n->flag |= ISPRIVATE;
 		/* reset Home if it's deleted */
 		if (n == Home)
-			Home = addnode(Home->n_name);
+			Home = addnode(Home->name);
 	  }
 	| usite NET usite	{deletelink($1, $3);}
 	;
@@ -267,10 +269,10 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 	char anon[25];
 
 	if (network == 0) {
-		sprintf(anon, "[unnamed net %d]", netanon++);
+		snprintf(anon, sizeof anon, "[unnamed net %d]", netanon++);
 		network = addnode(anon);
 	}
-	network->n_flag |= NNET;
+	network->flag |= NNET;
 
 	/* insert the links */
 	for (member = nlist ; member; member = nextnet) {
@@ -278,15 +280,15 @@ fixnet(Node *network, Node *nlist, Cost cost, char netchar, char netdir)
 		/* network -> member, cost is 0 */
 		l = addlink(network, member, (Cost) 0, netchar, netdir);
 		if (GATEWAYED(network) && GATEWAYED(member))
-			l->l_flag |= LGATEWAY;
+			l->flag |= LGATEWAY;
 
 		/* member -> network, cost is parameter */
 		/* never ever ever crawl up from a domain*/
 		if (!ISADOMAIN(network))
 			(void) addlink(member, network, cost, netchar, netdir);
 
-		nextnet = member->n_net;
-		member->n_net = 0;	/* clear for later use */
+		nextnet = member->net;
+		member->net = 0;	/* clear for later use */
 	}
 }
 
@@ -375,7 +377,8 @@ continuation:
 					yylval.y_cost = ct->cval;
 					return COST;
 				}
-			sprintf(errbuf, "unknown cost (%s), using default", buf);
+			snprintf(errbuf, sizeof errbuf,
+			    "unknown cost (%s), using default", buf);
 			yyerror(errbuf);
 			yylval.y_cost = DEFCOST;
 			return COST;
@@ -495,7 +498,7 @@ yywrap()
 	while (optind < Argc) {
 		if (freopen((Cfile = Argv[optind++]), "r", stdin) != 0)
 			return 0;
-		sprintf(errbuf, "%s: %s", Argv[0], Cfile);
+		snprintf(errbuf, sizeof errbuf, "%s: %s", Argv[0], Cfile);
 		perror(errbuf);
 	}
 	freopen("/dev/null", "r", stdin);
@@ -507,16 +510,17 @@ adjust(Node *n, Cost cost)
 {
 	Link *l;
 
-	n->n_cost += cost;	/* cumulative */
+	n->cost += cost;	/* cumulative */
 
 	/* hit existing links */
-	for (l = n->n_link; l; l = l->l_next) {
-		if ((l->l_cost += cost) < 0) {
+	for (l = n->link; l; l = l->next) {
+		if ((l->cost += cost) < 0) {
 			char buf[100];
 
-			l->l_flag |= LDEAD;
-			sprintf(buf, "link to %s deleted with negative cost",
-							l->l_to->n_name);
+			l->flag |= LDEAD;
+			snprintf(buf, sizeof buf,
+			    "link to %s deleted with negative cost",
+			    l->to->name);
 			yyerror(buf);
 		}
 	}

@@ -1,5 +1,8 @@
 #include <unistd.h>
 
+#include "def.h"
+#include "fns.h"
+
 char *
 local(void)
 {

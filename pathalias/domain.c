@@ -1,16 +1,16 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)domain.c	9.5 92/08/25";
-#endif				/* lint */
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+
+#include <errno.h>
+#include <resolv.h>
+#include <string.h>
 
 #include "def.h"
-
-/* imports */
-extern dom *newdom();
-extern char *strsave();
-extern int errno, Vflag;
-
-/* exports */
+#include "fns.h"
 
 /* privates */
 static Dom *good, *bad;
@@ -60,7 +60,7 @@ ondomlist(Dom **headp, char *domain)
 
 
 
-int
+void
 adddom(Dom **headp, char *domain)
 {
 	Dom *d, *head = *headp;
@@ -73,7 +73,7 @@ adddom(Dom **headp, char *domain)
 	*headp = d;
 }
 
-int
+void
 movetofront(Dom **headp, Dom *d)
 {
 	Dom *head = *headp;
@@ -93,25 +93,25 @@ nslookup(char *domain)
 {
 	HEADER *hp;
 	int n;
-	char q[PACKETSZ], a[PACKETSZ];	/* query, answer */
+	unsigned char q[PACKETSZ], a[PACKETSZ];	// query, answer
 	char buf[PACKETSZ + 1];
 
 	if ((n = strlen(domain)) >= PACKETSZ)
 		return 0;
-	strcpy(buf, domain);
-	if (buf[n - 1] != '.') {
+	memmove(buf, domain, n);
+	if (buf[n - 1] != '.')
 		buf[n++] = '.';
-		buf[n] = 0;
-	}
-	if ((n =
-	    res_mkquery(QUERY, buf, C_IN, T_ANY, (char *)0, 0,
-	    (struct rrec *)0, q, sizeof(q))) < 0)
+	buf[n] = '\0';
+	n = res_mkquery(QUERY, buf, C_IN, T_ANY, NULL, 0, NULL, q, sizeof q);
+	if (n < 0)
 		die("impossible res_mkquery error");
 	errno = 0;
-	if ((n = res_send(q, n, a, sizeof(a))) < 0)
+	n = res_send(q, n, a, sizeof a);
+	if (n < 0)
 		die("res_send");
 	hp = (HEADER *) a;
 	if (hp->rcode == NOERROR)
 		return 1;
+
 	return 0;
 }

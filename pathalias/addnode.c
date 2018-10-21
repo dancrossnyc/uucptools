@@ -1,11 +1,15 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)addnode.c	9.7 91/05/23";
-#endif
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
+
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "def.h"
+#include "fns.h"
 
-#define EQ(n, s)	(*(n)->n_name == *(s) && strcmp((n)->n_name, (s)) == 0)
+#define EQ(n, s)	(*(n)->name == *(s) && strcmp((n)->name, (s)) == 0)
 
 /* exports */
 Node **Table;			/* hash table ^ priority queue */
@@ -61,9 +65,9 @@ addnode(char *name)
 		return Table[i];
 
 	n = newnode();
-	n->n_name = strsave(name);
+	n->name = strsave(name);
 	Table[i] = n;
-	n->n_tloc = i;		/* essentially a back link to the table */
+	n->tloc = i;		/* essentially a back link to the table */
 
 	if (InetFlag && Home != 0
 	    && (dot = strrchr(name, '.')) != 0 && isadomain(dot + 1))
@@ -79,13 +83,13 @@ alias(Node *n1, Node *n2)
 
 	if (ISADOMAIN(n1) && ISADOMAIN(n2)) {
 		fprintf(stderr, "%s: domain alias %s = %s is illegal\n",
-		    Argv[0], n1->n_name, n2->n_name);
+		    Argv[0], n1->name, n2->name);
 		return;
 	}
 	l = addlink(n1, n2, (Cost) 0, DEFNET, DEFDIR);
-	l->l_flag |= LALIAS;
+	l->flag |= LALIAS;
 	l = addlink(n2, n1, (Cost) 0, DEFNET, DEFDIR);
-	l->l_flag |= LALIAS;
+	l->flag |= LALIAS;
 	if (Tflag)
 		atrace(n1, n2);
 }
@@ -187,7 +191,7 @@ hash(char *name, int unique)
 	 * this is an "inner loop."
 	 */
 	while ((n = Table[probe]) != 0) {
-		if (EQ(n, name) && !(n->n_flag & ISPRIVATE) && !unique)
+		if (EQ(n, name) && !(n->flag & ISPRIVATE) && !unique)
 			return probe;	/* this is it! */
 
 		probe -= hash2;	/* double hashing */
@@ -217,12 +221,12 @@ rehash(void)
 	do {
 		if (*optr == 0)
 			continue;	/* empty slot in old table */
-		probe = hash((*optr)->n_name,
-		    ((*optr)->n_flag & ISPRIVATE) != 0);
+		probe = hash((*optr)->name,
+		    ((*optr)->flag & ISPRIVATE) != 0);
 		if (Table[probe] != 0)
 			die("rehash error");
 		Table[probe] = *optr;
-		(*optr)->n_tloc = probe;
+		(*optr)->tloc = probe;
 	} while (optr-- > otable);
 	freetable(otable, osize);
 }
@@ -245,8 +249,8 @@ isprivate(char *name)
 {
 	Node *n;
 
-	for (n = Private; n != 0; n = n->n_private)
-		if (strcmp(name, n->n_name) == 0)
+	for (n = Private; n != 0; n = n->private)
+		if (strcmp(name, n->name) == 0)
 			return n;
 	return 0;
 }
@@ -261,14 +265,14 @@ addhidden(char *name)
 		lowercase(name);
 
 	n = newnode();
-	n->n_name = strsave(name);
-	n->n_flag = ISPRIVATE;
-	i = hash(n->n_name, 1);
+	n->name = strsave(name);
+	n->flag = ISPRIVATE;
+	i = hash(n->name, 1);
 	if (Table[i] != 0)
 		die("impossible hidden node error");
 	Table[i] = n;
-	n->n_tloc = i;
-	n->n_private = 0;
+	n->tloc = i;
+	n->private = 0;
 	return n;
 }
 
@@ -279,15 +283,15 @@ fixprivate(void)
 	long i;
 
 	for (n = Private; n != 0; n = next) {
-		n->n_flag |= ISPRIVATE;	/* overkill, but safe */
-		i = hash(n->n_name, 1);
+		n->flag |= ISPRIVATE;	/* overkill, but safe */
+		i = hash(n->name, 1);
 		if (Table[i] != 0)
 			die("impossible private node error");
 
 		Table[i] = n;
-		n->n_tloc = i;	/* essentially a back link to the table */
-		next = n->n_private;
-		n->n_private = 0;	/* clear for later use */
+		n->tloc = i;	/* essentially a back link to the table */
+		next = n->private;
+		n->private = 0;	/* clear for later use */
 	}
 	Private = 0;
 }
@@ -303,8 +307,8 @@ addprivate(char *name)
 		return n;
 
 	n = newnode();
-	n->n_name = strsave(name);
-	n->n_private = Private;
+	n->name = strsave(name);
+	n->private = Private;
 	Private = n;
 	return n;
 }

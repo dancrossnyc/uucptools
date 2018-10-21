@@ -14,13 +14,14 @@ Node *addprivate(char *name);
 /* domain.c */
 int isadomain(char *domain);
 int ondomlist(Dom **headp, char *domain);
-int adddom(Dom **headp, char *domain);
-int movetofront(Dom **headp, Dom * d);
+void adddom(Dom **headp, char *domain);
+void movetofront(Dom **headp, Dom * d);
 int nslookup(char *domain);
 /* local.c */
 char *local(void);
+/* main.c */
+void die(char *s);
 /* makedb.c */
-int main(int argc, char *argv[]);
 int dbfile(char *dbf);
 int dbcreat(char *dbf, char *suffix);
 int makedb(char *ifile);
@@ -42,7 +43,8 @@ Dom *newdom(void);
 char *strsave(char *s);
 Node **newtable(long size);
 void freetable(Node **t, long size);
-long allocation(void);
-void wasted(void);
 /* printit.c */
 void printit(void);
+/* parser.y */
+void yyerror(char *s);
+int yyparse(void);

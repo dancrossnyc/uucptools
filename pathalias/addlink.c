@@ -22,7 +22,7 @@ static void ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, c
 static Link *Trace[NTRACE];
 static int Tracecount;
 
-#define EQ(n1, n2)	(strcmp((n1)->n_name, (n2)->n_name) == 0)
+#define EQ(n1, n2)	(strcmp((n1)->name, (n2)->name) == 0)
 #define LTRACE		if (Tflag) ltrace
 
 Link *
@@ -34,13 +34,13 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 	/*
 	 * maintain uniqueness for dead links (only).
 	 */
-	for (l = from->n_link; l; l = l->l_next) {
+	for (l = from->link; l; l = l->next) {
 		if (!DEADLINK(l))
 			break;
-		if (to == l->l_to) {
+		if (to == l->to) {
 			/* what the hell, use cheaper dead cost */
-			if (cost < l->l_cost) {
-				l->l_cost = cost;
+			if (cost < l->cost) {
+				l->cost = cost;
 				netbits(l, netchar, netdir);
 			}
 			return l;
@@ -54,21 +54,22 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 	if (cost != INF)	/* ignore back links */
 		Lcount++;
 	if (prev) {
-		l->l_next = prev->l_next;
-		prev->l_next = l;
+		l->next = prev->next;
+		prev->next = l;
 	} else {
-		l->l_next = from->n_link;
-		from->n_link = l;
+		l->next = from->link;
+		from->link = l;
 	}
 
-	l->l_to = to;
+	l->to = to;
 	/* add penalty */
-	if ((l->l_cost = cost + from->n_cost) < 0) {
+	if ((l->cost = cost + from->cost) < 0) {
 		char buf[100];
 
-		l->l_flag |= LDEAD;
-		sprintf(buf, "link to %s ignored with negative cost",
-		    to->n_name);
+		l->flag |= LDEAD;
+		snprintf(buf, sizeof buf,
+		    "link to %s ignored with negative cost",
+		    to->name);
 		yyerror(buf);
 	}
 	if (netchar == 0) {
@@ -77,7 +78,7 @@ addlink(Node *from, Node *to, Cost cost, int netchar, int netdir)
 	}
 	netbits(l, netchar, netdir);
 	if (Dflag && ISADOMAIN(from))
-		l->l_flag |= LTERMINAL;
+		l->flag |= LTERMINAL;
 
 	return l;
 }
@@ -89,42 +90,42 @@ deadlink(Node *nleft, Node *nright)
 
 	/* DEAD host */
 	if (nright == 0) {
-		nleft->n_flag |= NDEAD;	/* DEAD host */
+		nleft->flag |= NDEAD;	/* DEAD host */
 		return;
 	}
 
 	/* DEAD link */
 
 	/* grab <nleft, nright> instances at head of nleft adjacency list */
-	while ((l = nleft->n_link) != 0 && l->l_to == nright) {
-		nleft->n_link = l->l_next;	/* disconnect */
-		l->l_next = lhold;	/* terminate */
+	while ((l = nleft->link) != 0 && l->to == nright) {
+		nleft->link = l->next;	/* disconnect */
+		l->next = lhold;	/* terminate */
 		lhold = l;	/* add to lhold */
 	}
 
 	/* move remaining <nleft, nright> instances */
-	for (lprev = nleft->n_link; lprev && lprev->l_next;
-	    lprev = lprev->l_next) {
-		if (lprev->l_next->l_to == nright) {
-			l = lprev->l_next;
-			lprev->l_next = l->l_next;	/* disconnect */
-			l->l_next = lhold;	/* terminate */
+	for (lprev = nleft->link; lprev && lprev->next;
+	    lprev = lprev->next) {
+		if (lprev->next->to == nright) {
+			l = lprev->next;
+			lprev->next = l->next;	/* disconnect */
+			l->next = lhold;	/* terminate */
 			lhold = l;
 		}
 	}
 
 	/* check for emptiness */
 	if (lhold == 0) {
-		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->l_flag |=
+		addlink(nleft, nright, INF / 2, DEFNET, DEFDIR)->flag |=
 		    LDEAD;
 		return;
 	}
 
 	/* reinsert deleted edges as DEAD links */
 	for (l = lhold; l; l = lnext) {
-		lnext = l->l_next;
-		addlink(nleft, nright, l->l_cost, NETCHAR(l),
-		    NETDIR(l))->l_flag |= LDEAD;
+		lnext = l->next;
+		addlink(nleft, nright, l->cost, NETCHAR(l),
+		    NETDIR(l))->flag |= LDEAD;
 		freelink(l);
 	}
 }
@@ -132,9 +133,9 @@ deadlink(Node *nleft, Node *nright)
 static void
 netbits(Link *l, int netchar, int netdir)
 {
-	l->l_flag &= ~LDIR;
-	l->l_flag |= netdir;
-	l->l_netop = netchar;
+	l->flag &= ~LDIR;
+	l->flag |= netdir;
+	l->netop = netchar;
 }
 
 int
@@ -149,11 +150,11 @@ tracelink(char *arg)
 	bang = strchr(arg, '!');
 	if (bang) {
 		*bang = 0;
-		l->l_to = addnode(bang + 1);
+		l->to = addnode(bang + 1);
 	} else
-		l->l_to = 0;
+		l->to = 0;
 
-	l->l_from = addnode(arg);
+	l->from = addnode(arg);
 	Trace[Tracecount++] = l;
 	return 0;
 }
@@ -171,12 +172,12 @@ ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
 		/* overkill, but you asked for it! */
-		if (l->l_to == 0) {
-			if (EQ(from, l->l_from) || EQ(to, l->l_from))
+		if (l->to == 0) {
+			if (EQ(from, l->from) || EQ(to, l->from))
 				break;
-		} else if (EQ(from, l->l_from) && EQ(to, l->l_to))
+		} else if (EQ(from, l->from) && EQ(to, l->to))
 			break;
-		else if (EQ(from, l->l_to) && EQ(to, l->l_from))
+		else if (EQ(from, l->to) && EQ(to, l->from))
 			break;	/* potential dead backlink */
 	}
 	if (i < Tracecount)
@@ -187,18 +188,16 @@ ltrace(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 static void
 ltrprint(Node *from, Node *to, Cost cost, int netchar, int netdir, char *message)
 {
-	char buf[256], *bptr = buf;
+	char buf[256], nc[4];
 
-	strcpy(bptr, from->n_name);
-	bptr += strlen(bptr);
-	*bptr++ = ' ';
-	if (netdir == LRIGHT)	/* @% */
-		*bptr++ = netchar;
-	strcpy(bptr, to->n_name);
-	bptr += strlen(bptr);
-	if (netdir == LLEFT)	/* !: */
-		*bptr++ = netchar;
-	sprintf(bptr, "(%ld) %s", cost, message);
+	snprintf(nc, sizeof nc, "%c", netchar);
+	snprintf(buf, sizeof buf,
+	    "%s %s%s%s(%ld) %s",
+	    from->name,
+	    (netdir == LRIGHT) ? nc : "",
+	    to->name,
+	    (netdir == LLEFT) ? nc : "",
+	    cost, message);
 	yyerror(buf);
 }
 
@@ -211,10 +210,10 @@ atrace(Node *n1, Node *n2)
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
-		if (l->l_to == 0
-		    && ((Node *) l->l_from == n1
-		    || (Node *) l->l_from == n2)) {
-			sprintf(buf, "%s = %s", n1->n_name, n2->n_name);
+		if (l->to == 0
+		    && ((Node *) l->from == n1
+		    || (Node *) l->from == n2)) {
+			snprintf(buf, sizeof buf, "%s = %s", n1->name, n2->name);
 			yyerror(buf);
 			return;
 		}
@@ -229,10 +228,10 @@ maptrace(Node *from, Node *to)
 
 	for (i = 0; i < Tracecount; i++) {
 		l = Trace[i];
-		if (l->l_to == 0) {
-			if (EQ(from, l->l_from) || EQ(to, l->l_from))
+		if (l->to == 0) {
+			if (EQ(from, l->from) || EQ(to, l->from))
 				return 1;
-		} else if (EQ(from, l->l_from) && EQ(to, l->l_to))
+		} else if (EQ(from, l->from) && EQ(to, l->to))
 			return 1;
 	}
 	return 0;
@@ -243,38 +242,38 @@ deletelink(Node *from, Node *to)
 {
 	Link *l, *lnext;
 
-	l = from->n_link;
+	l = from->link;
 
 	/* delete all neighbors of from */
 	if (to == 0) {
 		while (l) {
-			LTRACE(from, l->l_to, l->l_cost, NETCHAR(l),
+			LTRACE(from, l->to, l->cost, NETCHAR(l),
 			    NETDIR(l), "DELETED");
-			lnext = l->l_next;
+			lnext = l->next;
 			freelink(l);
 			l = lnext;
 		}
-		from->n_link = 0;
+		from->link = 0;
 		return;
 	}
 
 	/* delete from head of list */
-	while (l && EQ(to, l->l_to)) {
-		LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l),
+	while (l && EQ(to, l->to)) {
+		LTRACE(from, to, l->cost, NETCHAR(l), NETDIR(l),
 		    "DELETED");
-		lnext = l->l_next;
+		lnext = l->next;
 		freelink(l);
-		l = from->n_link = lnext;
+		l = from->link = lnext;
 	}
 
 	/* delete from interior of list */
 	if (l == 0)
 		return;
-	for (lnext = l->l_next; lnext; lnext = l->l_next) {
-		if (EQ(to, lnext->l_to)) {
-			LTRACE(from, to, l->l_cost, NETCHAR(l), NETDIR(l),
+	for (lnext = l->next; lnext; lnext = l->next) {
+		if (EQ(to, lnext->to)) {
+			LTRACE(from, to, l->cost, NETCHAR(l), NETDIR(l),
 			    "DELETED");
-			l->l_next = lnext->l_next;
+			l->next = lnext->next;
 			freelink(lnext);
 			/* continue processing this link */
 		} else

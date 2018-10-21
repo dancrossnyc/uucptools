@@ -43,55 +43,41 @@ vprint(FILE *fp, const char *fmt, ...)
 #define NTERMINAL  0x0800	/* heaped as terminal edge (or alias thereto) */
 #define NREF	   0x1000	/* node has an "interesting" reference */
 
-#define ISADOMAIN(n)	 ((n)->n_name[0] == '.')
-#define ISANET(n)	 (((n)->n_flag & NNET) || ISADOMAIN(n))
-#define ALTEREGO(n1, n2) ((n1)->n_name == (n2)->n_name)
-#define DEADHOST(n)	 (((n)->n_flag & (NDEAD | NTERMINAL)) && !ISANET(n))
-#define DEADLINK(l)	 ((l)->l_flag & LDEAD)
-#define DEADNET(n)	 (((n)->n_flag & (NNET | NDEAD)) == (NNET | NDEAD))
+#define ISADOMAIN(n)	 ((n)->name[0] == '.')
+#define ISANET(n)	 (((n)->flag & NNET) || ISADOMAIN(n))
+#define ALTEREGO(n1, n2) ((n1)->name == (n2)->name)
+#define DEADHOST(n)	 (((n)->flag & (NDEAD | NTERMINAL)) && !ISANET(n))
+#define DEADLINK(l)	 ((l)->flag & LDEAD)
+#define DEADNET(n)	 (((n)->flag & (NNET | NDEAD)) == (NNET | NDEAD))
 #define GATEWAYED(n)	 (DEADNET(n) || ISADOMAIN(n))
 
-#ifndef DEBUG
-/*
- * save some space in nodes -- there are > 10,000 allocated!
- */
-
-#define n_root un1.nu_root
-#define n_net un1.nu_net
-#define n_copy un1.nu_copy
-
-#define n_private un2.nu_priv
-#define n_parent  un2.nu_par
-
-/* WARNING: if > 2^16 nodes, type of n_tloc must change */
 struct Node {
-	char *n_name;		/* host name */
-	Link *n_link;		/* adjacency list */
-	Cost n_cost;		/* cost to this host */
-	union {
-		Node *nu_net;	/* others in this network (parsing) */
-		Node *nu_root;	/* root of net cycle (graph dumping) */
-		Node *nu_copy;	/* circular copy list (mapping) */
-	} un1;
-	union {
-		Node *nu_priv;	/* other privates in this file (parsing) */
-		Node *nu_par;	/* parent in shortest path tree (mapping) */
-	} un2;
-	unsigned short n_tloc;	/* back ptr to heap/hash table */
-	unsigned short n_flag;	/* see manifests above */
+	char *name;		/* host name */
+	Link *link;		/* adjacency list */
+	Cost cost;		/* cost to this host */
+	Node *net;		/* others in this network (parsing) */
+	Node *root;		/* root of net cycle (graph dumping) */
+	Node *copy;		/* circular copy list (mapping) */
+	Node *private;		/* other privates in this file (parsing) */
+	Node *parent;		/* parent in shortest path tree (mapping) */
+	unsigned int tloc;	/* back ptr to heap/hash table */
+	unsigned int flag;	/* see manifests above */
 };
 
-#endif /*DEBUG*/
 #define MILLION (1000L * 1000L)
 #define	DEFNET	'!'		/* default network operator */
 #define	DEFDIR	LLEFT		/* host on left is default */
-#define	DEFCOST	((Cost) 4000)	/* default cost of a link */
-#define	INF	((Cost) 100 * MILLION)	/* infinitely expensive link */
+#define	DEFCOST	((Cost)4000)	/* default cost of a link */
+#define	INF	((Cost)100 * MILLION)	/* infinitely expensive link */
 #define DEFPENALTY ((Cost) 200)	/* default avoidance cost */
-/* data structure for adjacency list representation */
+
+/*
+ * data structure for adjacency list representation
+ */
+
 /* flags for l_dir */
-#define NETDIR(l)	((l)->l_flag & LDIR)
-#define NETCHAR(l)	((l)->l_netop)
+#define NETDIR(l)	((l)->flag & LDIR)
+#define NETCHAR(l)	((l)->netop)
 #define LDIR	  0x0008	/* 0 for left, 1 for right */
 #define LRIGHT	  0x0000	/* user@host style */
 #define LLEFT	  0x0008	/* host!user style */
@@ -100,52 +86,22 @@ struct Node {
 #define LTREE	  0x0040	/* member of shortest path tree */
 #define LGATEWAY  0x0080	/* this link is a gateway */
 #define LTERMINAL 0x0100	/* this link is terminal */
-#ifndef DEBUG
+
 /*
- * borrow a field for link/node tracing.  there's a shitload of
- * edges -- every word counts.  only so much squishing is possible:
- * alignment dictates that the size be a multiple of four.
+ * Link structure.
  */
-#define l_next un.lu_next
-#define l_from un.lu_from
 struct Link {
-	Node *l_to;		/* adjacent node */
-	Cost l_cost;		/* edge cost */
-	union {
-		Link *lu_next;	/* rest of adjacency list (not tracing) */
-		Node *lu_from;	/* source node (tracing) */
-	} un;
-	short l_flag;		/* right/left syntax, flags */
-	char l_netop;		/* network operator */
+	Node *to;		/* adjacent node */
+	Cost cost;		/* edge cost */
+	Link *next;		/* rest of adjacency list (not tracing) */
+	Node *from;		/* source node (tracing) */
+	short flag;		/* right/left syntax, flags */
+	char netop;		/* network operator */
 };
-#endif /*DEBUG*/
-#ifdef DEBUG
+
 /*
- * flattening out the unions makes it easier
- * to debug (when pi is unavailable).
+ * Doubly linked list for known and unknown domains.
  */
-struct node {
-	char *n_name;
-	link *n_link;
-	Cost n_cost;
-	node *n_net;
-	node *n_root;
-	node *n_copy;
-	node *n_private;
-	node *n_parent;
-	unsigned short n_tloc;
-	unsigned short n_flag;
-};
-struct link {
-	node *l_to;
-	Cost l_cost;
-	link *l_next;
-	node *l_from;
-	short l_flag;
-	char l_netop;
-};
-#endif /*DEBUG*/
-/* doubly linked list for known and unknown domains */
 struct Dom {
 	Dom *next;
 	Dom *prev;

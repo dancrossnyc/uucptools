@@ -8,5 +8,3 @@
 #define	OK		0
 #define	ERROR		1
 #define	SEVERE_ERROR	(-1)
-
-#define strclear(s, n)	((void) memset((s), 0, (n)))

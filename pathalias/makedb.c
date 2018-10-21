@@ -1,9 +1,9 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)makedb.c	9.1 87/10/04";
-#endif				/* lint */
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
 
 #include <stdio.h>
+
 #include "config.h"
 
 typedef struct {
@@ -52,12 +52,12 @@ main(int argc, char *argv[])
 	}
 
 	if (append == 0 && dbfile(Ofile) != 0) {
-		perror_(Ofile);
+		perror(Ofile);
 		exit(1);
 	}
 
 	if (dbminit(Ofile) < 0) {
-		perror_(Ofile);
+		perror(Ofile);
 		exit(1);
 	}
 
@@ -88,7 +88,6 @@ dbcreat(char *dbf, char *suffix)
 	return (0);
 }
 
-
 int
 makedb(char *ifile)
 {
@@ -96,7 +95,7 @@ makedb(char *ifile)
 	datum key, val;
 
 	if (ifile && (freopen(ifile, "r", stdin) == NULL)) {
-		perror_(ifile);
+		perror(ifile);
 		return;
 	}
 
@@ -122,13 +121,6 @@ makedb(char *ifile)
 			val.dsize = 1;
 		}
 		if (store(key, val) < 0)
-			perror_(Ofile);
+			perror(Ofile);
 	}
-}
-
-int
-perror_(char *str)
-{
-	fprintf(stderr, "%s: ", ProgName);
-	perror(str);
 }

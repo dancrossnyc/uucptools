@@ -1,13 +1,13 @@
-/* pathalias -- by steve bellovin, as told to peter honeyman */
-#ifndef lint
-static char *sccsid = "@(#)main.c	9.8 91/06/11";
-#endif
+/*
+ * pathalias -- by steve bellovin, as told to peter honeyman
+ */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "def.h"
 #include "fns.h"
 
@@ -42,7 +42,6 @@ main(int argc, char *argv[])
 	int errflg = 0;
 
 	setbuf(stderr, (char *)0);
-	(void)allocation();	/* initialize data space monitoring */
 	Cfile = "[deadlinks]";	/* for tracing dead links */
 	Argv = argv;
 	Argc = argc;
@@ -117,29 +116,22 @@ main(int argc, char *argv[])
 	}
 
 	Home = addnode(locname);	/* add home node */
-	Home->n_cost = 0;	/* doesn't cost to get here */
+	Home->cost = 0;	/* doesn't cost to get here */
 
 	(void)yyparse();	/* read in link info */
 
-	vprint(stderr, "%d nodes, %d links, alloc %ldk\n",
-	    Ncount, Lcount, allocation());
+	vprint(stderr, "%ld nodes, %ld links\n", Ncount, Lcount);
 
 	Cfile = "[backlinks]";	/* for tracing back links */
 	Lineno = 0;
 
 	/* compute shortest path tree */
 	mapit();
-	vprint(stderr, "allocation is %ldk after mapping\n",
-	    allocation());
 
 	/* traverse tree and print paths */
 	printit();
-	vprint(stderr, "allocation is %ldk after printing\n",
-	    allocation());
 
-	wasted();		/* how much was wasted in memory allocation? */
-
-	return OK;
+	return 0;
 }
 
 void

@@ -19,7 +19,7 @@
 
 
 CC = cc
-CFLAGS = -O
+CFLAGS = -Wall -Werror -ansi -pedantic -std=c99 -O
 LDFLAGS = -s $(GETOPT) $(DBM) $(RESOLVER)
 YFLAGS = -d
 
