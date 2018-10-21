@@ -23,22 +23,22 @@ isadomain(char *domain)
 {
 
 	if (ondomlist(&good, domain)) {
-		vprintf(stderr, "%s on\n", domain);
+		vprint(stderr, "%s on\n", domain);
 		return 1;
 	}
 
 	if (ondomlist(&bad, domain)) {
-		vprintf(stderr, "%s off\n", domain);
+		vprint(stderr, "%s off\n", domain);
 		return 0;
 	}
 
 	if (nslookup(domain)) {
 		adddom(&good, domain);
-		vprintf(stderr, "%s add\n", domain);
+		vprint(stderr, "%s add\n", domain);
 		return 1;
 	} else {
 		adddom(&bad, domain);
-		vprintf(stderr, "%s del\n", domain);
+		vprint(stderr, "%s del\n", domain);
 		return 0;
 	}
 }
@@ -88,10 +88,6 @@ movetofront(Dom **headp, Dom *d)
 	*headp = d;
 }
 
-#ifdef RESOLVER
-#include <sys/types.h>
-#include <arpa/nameser.h>
-
 int
 nslookup(char *domain)
 {
@@ -119,11 +115,3 @@ nslookup(char *domain)
 		return 1;
 	return 0;
 }
-#else				/*!RESOLVER */
-/*ARGSUSED*/
-int
-nslookup(char *domain)
-{
-	return 0;		/* i guess !?! */
-}
-#endif /*RESOLVER*/

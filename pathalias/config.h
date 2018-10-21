@@ -6,8 +6,6 @@
  * +--------------------------------------------------------------------+ *
  **************************************************************************/
 
-#define RESOLVER		/* have internet domain name resolver */
-
 /* default place for dbm output of makedb (or use -o at run-time) */
 #define	ALIASDB			"/usr/local/lib/palias"
 
@@ -22,10 +20,5 @@
 #define	OK		0
 #define	ERROR		1
 #define	SEVERE_ERROR	(-1)
-#define STDIO_H		<stdio.h>
-#define CTYPE_H		<ctype.h>
-
-#define index strchr
-#define rindex strrchr
 
 #define strclear(s, n)	((void) memset((s), 0, (n)))

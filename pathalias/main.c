@@ -3,7 +3,13 @@
 static char *sccsid = "@(#)main.c	9.8 91/06/11";
 #endif
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "def.h"
+#include "fns.h"
 
 /* exports */
 char *Cfile;			/* current input file */
@@ -115,9 +121,7 @@ main(int argc, char *argv[])
 
 	(void)yyparse();	/* read in link info */
 
-	if (Vflag > 1)
-		hashanalyze();
-	vprintf(stderr, "%d nodes, %d links, alloc %ldk\n",
+	vprint(stderr, "%d nodes, %d links, alloc %ldk\n",
 	    Ncount, Lcount, allocation());
 
 	Cfile = "[backlinks]";	/* for tracing back links */
@@ -125,12 +129,12 @@ main(int argc, char *argv[])
 
 	/* compute shortest path tree */
 	mapit();
-	vprintf(stderr, "allocation is %ldk after mapping\n",
+	vprint(stderr, "allocation is %ldk after mapping\n",
 	    allocation());
 
 	/* traverse tree and print paths */
 	printit();
-	vprintf(stderr, "allocation is %ldk after printing\n",
+	vprint(stderr, "allocation is %ldk after printing\n",
 	    allocation());
 
 	wasted();		/* how much was wasted in memory allocation? */
@@ -141,15 +145,6 @@ main(int argc, char *argv[])
 void
 die(char *s)
 {
-#ifdef DEBUG
-	extern int abort();
-
-	fprintf(stderr, "%s: %s\n", Argv[0], s);
-	fflush(stdout);
-	fflush(stderr);
-	abort();
-#else
 	fprintf(stderr, "%s: %s; notify the authorities\n", Argv[0], s);
 	exit(SEVERE_ERROR);
-#endif
 }

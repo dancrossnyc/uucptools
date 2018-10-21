@@ -1,24 +1,30 @@
 /* pathalias -- by steve bellovin, as told to peter honeyman */
 
-#ifndef lint
-#ifdef MAIN
-static char *h_sccsid = "@(#)def.h	9.8 91/06/11";
-#endif /*MAIN*/
-#endif				/*lint */
-#include "config.h"
-#include STDIO_H
-#include CTYPE_H
+#include <stdarg.h>
+#include <stdio.h>
+#include <ctype.h>
+
 typedef long Cost;
 typedef struct Node Node;
 typedef struct Link Link;
 typedef struct Dom Dom;
 
-#ifdef lint
-#define vprintf fprintf
-#else				/*!lint -- this gives null effect warning */
-/* because it's there ... */
-#define vprintf		!Vflag ? 0 : fprintf
-#endif				/*lint */
+extern int Vflag;
+
+static inline int
+vprint(FILE *fp, const char *fmt, ...)
+{
+	int r = 0;
+
+	if (Vflag) {
+		va_list ap;
+		va_start(ap, fmt);
+		r = vfprintf(fp, fmt, ap);
+		va_end(ap);
+	}
+
+	return r;
+}
 
 #define NTRACE	16		/* can trace up to NTRACE hosts/links */
 

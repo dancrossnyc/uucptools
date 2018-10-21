@@ -2,7 +2,11 @@
  * pathalias -- by steve bellovin, as told to peter honeyman
  */
 
+#include <stdio.h>
+#include <string.h>
+
 #include "def.h"
+#include "fns.h"
 
 /* exports */
 char *Netchars = "!:@%";	/* sparse, but sufficient */
@@ -10,10 +14,6 @@ long Lcount;			/* how many edges? */
 
 /* imports */
 extern int Tflag, Dflag;
-extern link *newlink();
-extern node *addnode();
-extern void yyerror(), die();
-extern int strcmp(), strlen();
 
 /* privates */
 static void netbits(Link *l, int netchar, int netdir);

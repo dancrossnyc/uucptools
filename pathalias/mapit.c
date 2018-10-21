@@ -41,7 +41,7 @@ mapit(void)
 	Node *n;
 	Link *l;
 
-	vprintf(stderr, "*** mapping\ttcount = %ld\n", Tcount);
+	vprint(stderr, "*** mapping\ttcount = %ld\n", Tcount);
 	Tflag = Tflag && Vflag;	/* tracing here only if verbose */
 	/* re-use the hash table space for the heap */
 	Heap = (Link **) Table;
@@ -76,7 +76,7 @@ mapit(void)
 			n->n_flag |= MAPPED;
 			heapchildren(n);	/* add children to heap */
 		}
-		vprintf(stderr,
+		vprint(stderr,
 		    "heap hiwat %d\nalloc %ldk, ncopy = %ld, nlink = %ld, lcopy = %ld\n",
 		    Heaphighwater, allocation(), NumNcopy, Nlink,
 		    NumLcopy);
@@ -538,7 +538,7 @@ backlinks(void)
 			fprintf(stderr, "backlink: %s <- %s\n",
 			    nomap->n_name, child->n_name);
 	}
-	vprintf(stderr, "%d backlinks\n", Nheap);
+	vprint(stderr, "%d backlinks\n", Nheap);
 }
 
 /* find a mapped copy of n if it exists */
@@ -613,65 +613,3 @@ otracereport(Node *n)
 	trprint(stderr, n);
 	fputs(" mapped\n", stderr);
 }
-
-#if 0
-/* extremely time consuming, exhaustive check of heap sanity. */
-chkheap(i)
-{
-	int lhs, rhs;
-
-	lhs = i * 2;
-	rhs = lhs + 1;
-
-	if (lhs <= Nheap) {
-		if (Heap[i]->l_to->n_cost > Heap[lhs]->l_to->n_cost)
-			die("chkheap failure on lhs");
-		chkheap(lhs);
-	}
-	if (rhs <= Nheap) {
-		if (Heap[i]->l_to->n_cost > Heap[rhs]->l_to->n_cost)
-			die("chkheap failure on rhs");
-		chkheap(rhs);
-	}
-#if 00
-	/* this hasn't been used for years */
-	for (i = 1; i < Nheap; i++) {
-		Link *l;
-
-		vprintf(stderr, "%5d %-16s", i, Heap[i]->l_to->n_name);
-		if ((l = Heap[i]->l_to->n_link) != 0)
-			do {
-				vprintf(stderr, "%-16s", l->l_to->n_name);
-			} while ((l = l->l_next) != 0);
-		vprintf(stderr, "\n");
-	}
-	for (i = Hashpart; i < Tabsize; i++) {
-		Link *l;
-		Node *n;
-
-		vprintf(stderr, "%5d %-16s", i, Table[i]->n_name);
-		if ((l = Table[i]->n_link) != 0)
-			do {
-				vprintf(stderr, "%-16s", l->l_to->n_name);
-			} while ((l = l->l_next) != 0);
-		vprintf(stderr, "\n");
-	}
-#endif				/*00 */
-
-}
-#endif				/*0 */
-
-/* this isn't much use */
-#if 0
-static int
-chkgap()
-{
-	static int gap = -1;
-	int newgap;
-
-	newgap = Hashpart - Nheap;
-	if (gap == -1 || newgap < gap)
-		gap = newgap;
-	return gap;
-}
-#endif				/*0 */

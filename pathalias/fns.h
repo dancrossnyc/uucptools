@@ -1,5 +1,5 @@
 /* addlink.c */
-Link *addlink(Node *from, Node *to, Cost cost, char netchar, char netdir);
+Link *addlink(Node *from, Node *to, Cost cost, int netchar, int netdir);
 void deadlink(Node *nleft, Node *nright);
 int tracelink(char *arg);
 void atrace(Node *n1, Node *n2);
@@ -8,7 +8,6 @@ void deletelink(Node *from, Node *to);
 /* addnode.c */
 Node *addnode(char *name);
 void alias(Node *n1, Node *n2);
-void hashanalyze(void);
 Node *addhidden(char *name);
 void fixprivate(void);
 Node *addprivate(char *name);

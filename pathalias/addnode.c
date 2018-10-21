@@ -204,16 +204,13 @@ rehash(void)
 	long probe;
 	long osize;
 
-#ifdef DEBUG
-	hashanalyze();
-#endif
 	optr = Table + Tabsize - 1;	/* ptr to last */
 	otable = Table;
 	osize = Tabsize;
 	Tabsize = Primes[++Tabindex];
 	if (Tabsize == 0)
 		die("too many hosts");	/* need more prime numbers */
-	vprintf(stderr, "rehash into %d\n", Tabsize);
+	vprint(stderr, "rehash into %d\n", Tabsize);
 	Table = newtable(Tabsize);
 	Tab128 = (HIGHWATER * Tabsize * 128L) / 100L;
 
@@ -229,85 +226,6 @@ rehash(void)
 	} while (optr-- > otable);
 	freetable(otable, osize);
 }
-
-void
-hashanalyze(void)
-#if 0
-{
-	long probe, hash2;
-	int count, i, collision[8];
-	int longest = 0, total = 0, slots = 0, longprobe = 0;
-	int nslots = sizeof(collision) / sizeof(collision[0]);
-
-	if (!Vflag)
-		return;
-
-	strclear((char *)collision, sizeof(collision));
-	for (i = 0; i < Tabsize; i++) {
-		if (Table[i] == 0)
-			continue;
-		/* private hosts too hard to account for ... */
-		if (Table[i]->n_flag & ISPRIVATE)
-			continue;
-		count = 1;
-		probe = fold(Table[i]->n_name);
-		/* don't change the order of the next two lines */
-		hash2 = HASH2(probe);
-		probe = HASH1(probe);
-		/* thank you! */
-		while (Table[probe] != 0
-		    && strcmp(Table[probe]->n_name,
-		    Table[i]->n_name) != 0) {
-			count++;
-			probe -= hash2;
-			if (probe < 0)
-				probe += Tabsize;
-		}
-		if (Table[probe] == 0)
-			die("impossible hash error");
-
-		total += count;
-		slots++;
-		if (count > longest) {
-			longest = count;
-			longprobe = i;
-		}
-		if (count >= nslots)
-			count = 0;
-		collision[count]++;
-	}
-	for (i = 1; i < nslots; i++)
-		if (collision[i])
-			fprintf(stderr, "%d chains: %d (%ld%%)\n",
-			    i, collision[i],
-			    (collision[i] * 100L) / slots);
-	if (collision[0])
-		fprintf(stderr, "> %d chains: %d (%ld%%)\n",
-		    nslots - 1, collision[0],
-		    (collision[0] * 100L) / slots);
-	fprintf(stderr, "%2.2f probes per access, longest chain: %d, %s\n",
-	    (double)total / slots, longest, Table[longprobe]->n_name);
-	if (Vflag < 2)
-		return;
-	probe = fold(Table[longprobe]->n_name);
-	hash2 = HASH2(probe);
-	probe = HASH1(probe);
-	while (Table[probe] != 0
-	    && strcmp(Table[probe]->n_name,
-	    Table[longprobe]->n_name) != 0) {
-		fprintf(stderr, "%5d %s\n", probe, Table[probe]->n_name);
-		probe -= hash2;
-		if (probe < 0)
-			probe += Tabsize;
-	}
-	fprintf(stderr, "%5d %s\n", probe, Table[probe]->n_name);
-
-}
-#else
-{
-	/* the hash algorithms are perfect -- leave them alone */
-}
-#endif
 
 /* convert to lower case in place */
 static void

@@ -321,7 +321,7 @@ ncopy(Node *parent, Link *l)
 
 #ifdef DEBUG
 	if (Vflag > 1)
-		vprintf(stderr, "<%s> <- %s\n", l->l_to->n_name,
+		vprint(stderr, "<%s> <- %s\n", l->l_to->n_name,
 		    parent->n_name);
 #endif
 	n = l->l_to;
@@ -374,7 +374,7 @@ lcopy(Node *parent, Node *n)
 			continue;
 #ifdef DEBUG
 		if (Vflag > 1)
-			vprintf(stderr, "\t-> %s\n", l->l_to->n_name);
+			vprint(stderr, "\t-> %s\n", l->l_to->n_name);
 #endif
 		NumLcopy++;
 		lcp = newlink();

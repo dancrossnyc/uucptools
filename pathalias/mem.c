@@ -119,5 +119,5 @@ wasted(void)
 {
 	if (Memwaste == 0)
 		return;
-	vprintf(stderr, "memory allocator wasted %ld bytes\n", Memwaste);
+	vprint(stderr, "memory allocator wasted %ld bytes\n", Memwaste);
 }
